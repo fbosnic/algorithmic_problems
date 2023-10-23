@@ -1,0 +1,10 @@
+[package]
+name = "how_many_substrings"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+algorithms = {path = "../rust_algorithms", package = "the_algorithms_rust" }
+algorithms_original_repo = { git = "https://github.com/TheAlgorithms/Rust.git", package = "the_algorithms_rust" }

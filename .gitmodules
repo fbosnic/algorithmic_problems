@@ -1,0 +1,6 @@
+[submodule "Rust"]
+	path = Rust
+	url = https://github.com/TheAlgorithms/Rust.git
+[submodule "rust_algorithms"]
+	path = rust_algorithms
+	url = https://github.com/fbosnic/rust_algorithms.git

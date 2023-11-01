@@ -1,13 +1,12 @@
 use std::cmp::min;
-use std::ops::Range;
 use std::vec::Vec;
-use std::ops::Add;
+use std::ops::{Range, Add, AddAssign, Neg, Mul};
 
 extern crate algorithms;
 use algorithms::data_structures::{RBTree, FenwickTree};
 
 
-fn lcp_construction(str_bytes: &[u8], suffix_array: Vec<usize>) -> Vec<usize> {
+fn lcp_construction(str_bytes: &[u8], suffix_array: &Vec<usize>) -> Vec<usize> {
     let n = str_bytes.len();
     let sa_lookup = inverse_permutation(&suffix_array);
     let mut prefix_array = vec![0; n];
@@ -38,6 +37,39 @@ fn inverse_permutation(permutation: &Vec<usize>) -> Vec<usize> {
         inverse_permutation[permutation[i]] = i;
     }
     return inverse_permutation;
+}
+
+
+struct AdvanceFenwickTree<T: Add + AddAssign + Copy + Default + Neg> {
+    linear_fwt: FenwickTree<T>,
+    const_fwt: FenwickTree<T>
+}
+
+
+impl<T: Add<Output = T> + AddAssign + Copy + Default + Neg<Output = T> + Mul<i32, Output = T>> AdvanceFenwickTree<T> {
+    pub fn add(&self, start: usize, end: usize, value: T) {
+        self.linear_fwt.add(start, value);
+        self.linear_fwt.add(end, -value);
+        self.const_fwt.add(start, -value * i32::try_from(start).unwrap());
+        self.const_fwt.add(end, value * i32::try_from(end).unwrap());
+    }
+
+    pub fn prefix_sum(&self, end: usize) -> T {
+        let lin_part = self.linear_fwt.prefix_sum(end);
+        let const_part = self.const_fwt.prefix_sum(end);
+        return lin_part + const_part;
+    }
+
+    pub fn range_sum(&self, start: usize, end:usize) -> T {
+        return self.prefix_sum(end) + (- self.prefix_sum(start));
+    }
+
+    pub fn with_len(len: usize) -> Self {
+        AdvanceFenwickTree {
+            linear_fwt: FenwickTree::with_len(len),
+            const_fwt: FenwickTree::with_len(len)
+        }
+    }
 }
 
 

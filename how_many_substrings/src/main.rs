@@ -47,7 +47,7 @@ struct AdvanceFenwickTree<T: Add + AddAssign + Copy + Default + Neg> {
 
 
 impl<T: Add<Output = T> + AddAssign + Copy + Default + Neg<Output = T> + Mul<i32, Output = T>> AdvanceFenwickTree<T> {
-    pub fn add(&self, start: usize, end: usize, value: T) {
+    pub fn add(&mut self, start: usize, end: usize, value: T) {
         self.linear_fwt.add(start, value);
         self.linear_fwt.add(end, -value);
         self.const_fwt.add(start, -value * i32::try_from(start).unwrap());
@@ -85,8 +85,8 @@ fn count_substrings(str: String, queries: Vec<Range<usize> >) -> Vec<i32> {
     let min_lcp_segment_tree = algorithms::data_structures::SegmentTree::from_vec(&lcp, min);
 
     let mut suffix_sorter: RBTree<usize, i8> = RBTree::new();
-    let fw_prefix_counter: AdvanceFenwickTree<i32> = AdvanceFenwickTree::with_len(n);
-    fw_prefix_counter.add(0, 1, i32::try_from(lcp.iter().sum()).unwrap());
+    let mut fw_prefix_counter: AdvanceFenwickTree<i32> = AdvanceFenwickTree::with_len(n);
+    fw_prefix_counter.add(0, 1, i32::try_from(lcp.iter().sum::<usize>()).unwrap());
 
     for suffix in (0..n).rev() {
         let sa_pos = sa_lookup[suffix];

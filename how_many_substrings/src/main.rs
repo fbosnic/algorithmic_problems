@@ -81,8 +81,25 @@ fn _update_prefix_counter_with(fw_counter: &mut AdvanceFenwickTree<i32>, left_le
     fw_counter.add(min_len - comon_prefix, min_len, value);
 }
 
-fn count_substrings(str: String, queries: Vec<Range<usize> >) -> Vec<i32> {
+
+struct Query {
+    start: usize,
+    end: usize,
+    id: usize,
+}
+
+struct Result {
+    value: i32,
+    id: usize,
+}
+
+
+fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     let n = str.len();
+    if n == 0 {
+        return vec![];
+    }
+
     let sa = algorithms::string::generate_suffix_array_manber_myers(&str);
     let sa_lookup = inverse_permutation(&sa);
     let lcp = lcp_construction(str.as_bytes(), &sa);
@@ -92,7 +109,16 @@ fn count_substrings(str: String, queries: Vec<Range<usize> >) -> Vec<i32> {
     let mut fw_prefix_counter: AdvanceFenwickTree<i32> = AdvanceFenwickTree::with_len(n);
     fw_prefix_counter.add(0, 1, i32::try_from(lcp.iter().sum::<usize>()).unwrap());
 
-    for suffix in (0..n).rev() {
+    let mut queries: Vec<Query> = Vec::with_capacity(raw_queries.len());
+    for idx in 0..raw_queries.len() {
+        let q = &raw_queries[idx];
+        queries.push(Query{start: q.start, end: q.end, id: idx});
+    }
+    queries.sort_by(|a, b| a.start.cmp(&b.start));
+    let mut results: Vec<Result> = Vec::with_capacity(raw_queries.len());
+
+    let mut query = queries.pop().unwrap();
+    'main_loop: for suffix in (0..n).rev() {
         let sa_pos = sa_lookup[suffix];
         suffix_sorter.insert(sa_pos, 0);
         let node = suffix_sorter.find_node(&sa_pos).unwrap();
@@ -106,8 +132,8 @@ fn count_substrings(str: String, queries: Vec<Range<usize> >) -> Vec<i32> {
             let cp = min_lcp_segment_tree.query(sa_left..sa_right).unwrap();
             _update_prefix_counter_with(
                 &mut fw_prefix_counter,
-                sa[sa_left],
-                sa[sa_right],
+                n - sa[sa_left],
+                n - sa[sa_right],
                 cp,
                 1
             );
@@ -117,8 +143,8 @@ fn count_substrings(str: String, queries: Vec<Range<usize> >) -> Vec<i32> {
             let cp = min_lcp_segment_tree.query(sa_left..sa_pos).unwrap();
             _update_prefix_counter_with(
                 &mut fw_prefix_counter,
-                sa[sa_left],
-                sa[sa_pos],
+                n - sa[sa_left],
+                n - sa[sa_pos],
                 cp,
                 -1
             );
@@ -128,19 +154,39 @@ fn count_substrings(str: String, queries: Vec<Range<usize> >) -> Vec<i32> {
             let cp = min_lcp_segment_tree.query(sa_pos..sa_right).unwrap();
             _update_prefix_counter_with(
                 &mut fw_prefix_counter,
-                sa[sa_pos],
-                sa[sa_right],
+                n - sa[sa_pos],
+                n - sa[sa_right],
                 cp,
                 -1
             );
         }
+
+        while query.start == suffix {
+            let _max_substrings = (query.end - query.start) * (query.end - query.start - 1) / 2;
+            let res = fw_prefix_counter.prefix_sum(n - query.end);
+            results.push(Result { value: res, id: query.id });
+            match queries.pop() {
+                Some(q) => query = q,
+                None => break 'main_loop,
+            };
+        }
     }
-    return vec![1, 2, 3]
+    results.sort_by_key(|r| r.id);
+
+    let mut output: Vec<i32> = Vec::with_capacity(results.len());
+    for r in results {
+        output.push(r.value);
+    }
+    return output;
 }
 
 
 fn main() {
-    let str = String::from("value");
-    let queries: Vec<Range<usize>> = vec![Range{start: 0, end: 1}, Range{start: 2, end: 3}];
+    let str = String::from("aaabbabaaa");
+    let queries = vec![Range{start: 0, end: 3}, Range{start: 1, end: 5}];
     let results = count_substrings(str, queries);
+
+    for r in results {
+        println!("{r}");
+    }
 }

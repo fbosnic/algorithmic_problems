@@ -18,10 +18,14 @@ fn lcp_construction(str_bytes: &[u8], suffix_array: &Vec<usize>) -> Vec<usize> {
             continue;
         }
         let sa_follower_start = suffix_array[sa_pos + 1];
-        while str_bytes[suffix_start + prefix_counter] == str_bytes[sa_follower_start + prefix_counter] {
+        while
+            suffix_start + prefix_counter < n &&
+            sa_follower_start + prefix_counter < n &&
+            str_bytes[suffix_start + prefix_counter] == str_bytes[sa_follower_start + prefix_counter]
+        {
             prefix_counter += 1;
         }
-        prefix_array[sa_pos] = prefix_counter;
+        prefix_array[sa_pos + 1] = prefix_counter;
         if prefix_counter > 0 {
             prefix_counter -= 1;
         }
@@ -50,12 +54,12 @@ impl<T: Add<Output = T> + AddAssign + Copy + Default + Neg<Output = T> + Mul<i32
     pub fn add(&mut self, start: usize, end: usize, value: T) {
         self.linear_fwt.add(start, value);
         self.linear_fwt.add(end, -value);
-        self.const_fwt.add(start, -value * i32::try_from(start).unwrap());
-        self.const_fwt.add(end, value * i32::try_from(end).unwrap());
+        self.const_fwt.add(start, -value * (i32::try_from(start).unwrap() - 1));
+        self.const_fwt.add(end, value * (i32::try_from(end).unwrap() - 1));
     }
 
     pub fn prefix_sum(&self, end: usize) -> T {
-        let lin_part = self.linear_fwt.prefix_sum(end);
+        let lin_part = self.linear_fwt.prefix_sum(end) * i32::try_from(end).unwrap();
         let const_part = self.const_fwt.prefix_sum(end);
         return lin_part + const_part;
     }

@@ -52,6 +52,9 @@ struct AdvanceFenwickTree<T: Add + AddAssign + Copy + Default + Neg> {
 
 impl<T: Add<Output = T> + AddAssign + Copy + Default + Neg<Output = T> + Mul<i32, Output = T>> AdvanceFenwickTree<T> {
     pub fn add(&mut self, start: usize, end: usize, value: T) {
+        if start >= end {
+            return;
+        }
         self.linear_fwt.add(start, value);
         self.linear_fwt.add(end, -value);
         self.const_fwt.add(start, -value * (i32::try_from(start).unwrap() - 1));
@@ -78,7 +81,16 @@ impl<T: Add<Output = T> + AddAssign + Copy + Default + Neg<Output = T> + Mul<i32
 
 fn _update_prefix_counter_with(fw_counter: &mut AdvanceFenwickTree<i32>, left_len: usize, right_len: usize, comon_prefix: usize, value: i32) {
     let min_len = min(left_len, right_len);
-    fw_counter.add(min_len - comon_prefix, min_len, value);
+    fw_counter.add(0, 1, value * i32::try_from(comon_prefix).unwrap());
+    fw_counter.add(min_len - comon_prefix + 1, min_len + 1, -value);
+}
+
+fn add_prefix(fw_counter: &mut AdvanceFenwickTree<i32>, left_len: usize, right_len: usize, comon_prefix: usize) {
+    _update_prefix_counter_with(fw_counter, left_len, right_len, comon_prefix, 1);
+}
+
+fn remove_prefix(fw_counter: &mut AdvanceFenwickTree<i32>, left_len: usize, right_len: usize, comon_prefix: usize) {
+    _update_prefix_counter_with(fw_counter, left_len, right_len, comon_prefix, -1);
 }
 
 
@@ -107,7 +119,6 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
 
     let mut suffix_sorter: RBTree<usize, i8> = RBTree::new();
     let mut fw_prefix_counter: AdvanceFenwickTree<i32> = AdvanceFenwickTree::with_len(n);
-    fw_prefix_counter.add(0, 1, i32::try_from(lcp.iter().sum::<usize>()).unwrap());
 
     let mut queries: Vec<Query> = Vec::with_capacity(raw_queries.len());
     for idx in 0..raw_queries.len() {
@@ -126,44 +137,45 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
         let prev_node = suffix_sorter.previous_by_key(node);
         let next_node = suffix_sorter.next_by_key(node);
 
+        if suffix == n-1 {
+            continue;
+        }
+
         if !prev_node.is_none() && !next_node.is_none() {
             let sa_left = prev_node.unwrap().key;
             let sa_right = next_node.unwrap().key;
-            let cp = min_lcp_segment_tree.query(sa_left..sa_right).unwrap();
-            _update_prefix_counter_with(
+            let cp = min_lcp_segment_tree.query(sa_left+1..sa_right+1).unwrap();
+            remove_prefix(
                 &mut fw_prefix_counter,
                 n - sa[sa_left],
                 n - sa[sa_right],
-                cp,
-                1
+                cp
             );
         }
         if !prev_node.is_none() {
             let sa_left = prev_node.unwrap().key;
-            let cp = min_lcp_segment_tree.query(sa_left..sa_pos).unwrap();
-            _update_prefix_counter_with(
+            let cp = min_lcp_segment_tree.query(sa_left+1..sa_pos+1).unwrap();
+            add_prefix(
                 &mut fw_prefix_counter,
                 n - sa[sa_left],
                 n - sa[sa_pos],
-                cp,
-                -1
+                cp
             );
         }
         if !next_node.is_none() {
             let sa_right = next_node.unwrap().key;
-            let cp = min_lcp_segment_tree.query(sa_pos..sa_right).unwrap();
-            _update_prefix_counter_with(
+            let cp = min_lcp_segment_tree.query(sa_pos+1..sa_right+1).unwrap();
+            add_prefix(
                 &mut fw_prefix_counter,
                 n - sa[sa_pos],
                 n - sa[sa_right],
-                cp,
-                -1
+                cp
             );
         }
 
         while query.start == suffix {
-            let _max_substrings = (query.end - query.start) * (query.end - query.start - 1) / 2;
-            let res = fw_prefix_counter.prefix_sum(n - query.end);
+            let max_substrings = i32::try_from((query.end - query.start) * (query.end - query.start + 1) / 2).unwrap();
+            let res = max_substrings - fw_prefix_counter.prefix_sum(n - query.end);
             results.push(Result { value: res, id: query.id });
             match queries.pop() {
                 Some(q) => query = q,

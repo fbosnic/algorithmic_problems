@@ -206,3 +206,28 @@ fn main() {
         println!("{r}");
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::count_substrings;
+    use std::ops::Range;
+
+    #[test]
+    fn example1() {
+        let str = String::from("aaabbabaaa");
+        let queries = vec![
+            Range{start: 8, end: 10},
+            Range{start: 7, end: 9},
+            Range{start: 5, end: 9},
+            Range{start: 2, end: 5},
+            Range{start: 1, end: 9},
+        ];
+        let expected = vec![2, 2, 8, 5, 27];
+        let results = count_substrings(str, queries);
+
+        for idx in 0..results.len() {
+            assert_eq!(results[idx], expected[idx]);
+        }
+    }
+}

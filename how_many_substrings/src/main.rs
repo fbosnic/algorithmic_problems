@@ -195,7 +195,11 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
 
 fn main() {
     let str = String::from("aaabbabaaa");
-    let queries = vec![Range{start: 0, end: 3}, Range{start: 1, end: 5}];
+    let queries = vec![
+        Range{start: 8, end: 10},
+        Range{start: 7, end: 9},
+        Range{start: 5, end: 9},
+    ];
     let results = count_substrings(str, queries);
 
     for r in results {

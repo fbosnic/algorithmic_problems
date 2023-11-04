@@ -246,6 +246,24 @@ mod tests {
             assert_eq!(results[idx], expected[idx]);
         }
     }
+
+    #[test]
+    fn example2() {
+        let str = String::from("aabaa");
+        let queries = vec![
+            Range{start: 1, end: 2},
+            Range{start: 1, end: 5},
+            Range{start: 1, end: 2},
+            Range{start: 1, end: 5},
+            Range{start: 0, end: 3},
+        ];
+        let expected = vec![1, 8, 1, 8, 5];
+        let results = count_substrings(str, queries);
+
+        for idx in 0..results.len() {
+            assert_eq!(results[idx], expected[idx]);
+        }
+    }
 }
 
 

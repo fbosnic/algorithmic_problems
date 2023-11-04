@@ -2,6 +2,7 @@ use std::io;
 use std::cmp::min;
 use std::vec::Vec;
 use std::ops::{Range, Add, AddAssign, Neg, Mul};
+use std::convert::TryFrom;
 use std::fmt::Debug;
 
 // extern crate algorithms;

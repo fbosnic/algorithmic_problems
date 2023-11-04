@@ -4,7 +4,7 @@ use std::vec::Vec;
 use std::ops::{Range, Add, AddAssign, Neg, Mul};
 use std::fmt::Debug;
 
-extern crate algorithms;
+// extern crate algorithms;
 // use algorithms::data_structures::{RBTree, FenwickTree, SegmentTree};
 // use algorithms::string::generate_suffix_array_manber_myers;
 

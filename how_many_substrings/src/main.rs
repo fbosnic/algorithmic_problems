@@ -1,3 +1,4 @@
+use std::io;
 use std::cmp::min;
 use std::vec::Vec;
 use std::ops::{Range, Add, AddAssign, Neg, Mul};
@@ -194,13 +195,27 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
 }
 
 
+fn parse_line_to_two_numbers() -> (i32, i32) {
+    let mut line = String::new();
+    io::stdin().read_line(&mut line).unwrap();
+    let _tuple_sizes: Vec<&str> = line.split(" ").collect();
+    let a = _tuple_sizes[0].trim().parse::<i32>().unwrap();
+    let b = _tuple_sizes[1].trim().parse::<i32>().unwrap();
+    return (a, b);
+}
+
+
 fn main() {
-    let str = String::from("aaabbabaaa");
-    let queries = vec![
-        Range{start: 8, end: 10},
-        Range{start: 7, end: 9},
-        Range{start: 5, end: 9},
-    ];
+    let (_, q) = parse_line_to_two_numbers();
+    let mut str = String::new();
+    io::stdin().read_line(&mut str).unwrap();
+
+    let mut queries: Vec<Range<usize>>= vec![];
+    for _ in 0..q {
+        let (start, end) = parse_line_to_two_numbers();
+        queries.push(Range {start: usize::try_from(start).unwrap(), end: usize::try_from(end).unwrap()});
+    }
+
     let results = count_substrings(str, queries);
 
     for r in results {

@@ -213,7 +213,7 @@ fn main() {
     let mut queries: Vec<Range<usize>>= vec![];
     for _ in 0..q {
         let (start, end) = parse_line_to_two_numbers();
-        queries.push(Range {start: usize::try_from(start).unwrap(), end: usize::try_from(end).unwrap()});
+        queries.push(Range {start: usize::try_from(start).unwrap(), end: usize::try_from(end).unwrap() + 1});
     }
 
     let results = count_substrings(str, queries);

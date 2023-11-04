@@ -3,8 +3,8 @@ use std::vec::Vec;
 use std::ops::{Range, Add, AddAssign, Neg, Mul};
 
 extern crate algorithms;
-use algorithms::data_structures::{RBTree, FenwickTree};
-
+use algorithms::data_structures::{RBTree, FenwickTree, SegmentTree};
+use algorithms::string::generate_suffix_array_manber_myers;
 
 fn lcp_construction(str_bytes: &[u8], suffix_array: &Vec<usize>) -> Vec<usize> {
     let n = str_bytes.len();
@@ -112,10 +112,10 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
         return vec![];
     }
 
-    let sa = algorithms::string::generate_suffix_array_manber_myers(&str);
+    let sa = generate_suffix_array_manber_myers(&str);
     let sa_lookup = inverse_permutation(&sa);
     let lcp = lcp_construction(str.as_bytes(), &sa);
-    let min_lcp_segment_tree = algorithms::data_structures::SegmentTree::from_vec(&lcp, min);
+    let min_lcp_segment_tree = SegmentTree::from_vec(&lcp, min);
 
     let mut suffix_sorter: RBTree<usize, i8> = RBTree::new();
     let mut fw_prefix_counter: AdvanceFenwickTree<i32> = AdvanceFenwickTree::with_len(n);

@@ -47,14 +47,14 @@ fn inverse_permutation(permutation: &Vec<usize>) -> Vec<usize> {
 }
 
 
-struct AdvanceFenwickTree<T: Add + AddAssign + Copy + Default + Neg> {
-    linear_fwt: FenwickTree<T>,
-    const_fwt: FenwickTree<T>
+struct AdvanceFenwickTree {
+    linear_fwt: FenwickTree<i32>,
+    const_fwt: FenwickTree<i32>
 }
 
 
-impl<T: Add<Output = T> + AddAssign + Copy + Default + Neg<Output = T> + Mul<i32, Output = T>> AdvanceFenwickTree<T> {
-    pub fn add(&mut self, start: usize, end: usize, value: T) {
+impl AdvanceFenwickTree {
+    pub fn add(&mut self, start: usize, end: usize, value: i32) {
         if start >= end {
             return;
         }
@@ -64,13 +64,13 @@ impl<T: Add<Output = T> + AddAssign + Copy + Default + Neg<Output = T> + Mul<i32
         self.const_fwt.add(end, value * (i32::try_from(end).unwrap() - 1));
     }
 
-    pub fn prefix_sum(&self, end: usize) -> T {
+    pub fn prefix_sum(&self, end: usize) -> i32 {
         let lin_part = self.linear_fwt.prefix_sum(end) * i32::try_from(end).unwrap();
         let const_part = self.const_fwt.prefix_sum(end);
         return lin_part + const_part;
     }
 
-    pub fn range_sum(&self, start: usize, end:usize) -> T {
+    pub fn range_sum(&self, start: usize, end:usize) -> i32 {
         return self.prefix_sum(end) + (- self.prefix_sum(start));
     }
 
@@ -82,17 +82,17 @@ impl<T: Add<Output = T> + AddAssign + Copy + Default + Neg<Output = T> + Mul<i32
     }
 }
 
-fn _update_prefix_counter_with(fw_counter: &mut AdvanceFenwickTree<i32>, left_len: usize, right_len: usize, comon_prefix: usize, value: i32) {
+fn _update_prefix_counter_with(fw_counter: &mut AdvanceFenwickTree, left_len: usize, right_len: usize, comon_prefix: usize, value: i32) {
     let min_len = min(left_len, right_len);
     fw_counter.add(0, 1, value * i32::try_from(comon_prefix).unwrap());
     fw_counter.add(min_len - comon_prefix + 1, min_len + 1, -value);
 }
 
-fn add_prefix(fw_counter: &mut AdvanceFenwickTree<i32>, left_len: usize, right_len: usize, comon_prefix: usize) {
+fn add_prefix(fw_counter: &mut AdvanceFenwickTree, left_len: usize, right_len: usize, comon_prefix: usize) {
     _update_prefix_counter_with(fw_counter, left_len, right_len, comon_prefix, 1);
 }
 
-fn remove_prefix(fw_counter: &mut AdvanceFenwickTree<i32>, left_len: usize, right_len: usize, comon_prefix: usize) {
+fn remove_prefix(fw_counter: &mut AdvanceFenwickTree, left_len: usize, right_len: usize, comon_prefix: usize) {
     _update_prefix_counter_with(fw_counter, left_len, right_len, comon_prefix, -1);
 }
 
@@ -121,7 +121,7 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     let min_lcp_segment_tree = SegmentTree::from_vec(&lcp, min);
 
     let mut suffix_sorter: RBTree<usize, i8> = RBTree::new();
-    let mut fw_prefix_counter: AdvanceFenwickTree<i32> = AdvanceFenwickTree::with_len(n);
+    let mut fw_prefix_counter = AdvanceFenwickTree::with_len(n);
 
     let mut queries: Vec<Query> = Vec::with_capacity(raw_queries.len());
     for idx in 0..raw_queries.len() {

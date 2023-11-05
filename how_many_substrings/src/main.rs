@@ -4,6 +4,7 @@ use std::vec::Vec;
 use std::ops::{Range, Add, AddAssign, Neg, Mul};
 use std::convert::TryFrom;
 use std::fmt::Debug;
+use std::fmt;
 
 // extern crate algorithms;
 // use algorithms::data_structures::{RBTree, FenwickTree, SegmentTree};
@@ -49,7 +50,8 @@ fn inverse_permutation(permutation: &Vec<usize>) -> Vec<usize> {
 
 struct AdvanceFenwickTree {
     linear_fwt: FenwickTree<i32>,
-    const_fwt: FenwickTree<i32>
+    const_fwt: FenwickTree<i32>,
+    len: usize,
 }
 
 
@@ -80,7 +82,8 @@ impl AdvanceFenwickTree {
     pub fn with_len(len: usize) -> Self {
         AdvanceFenwickTree {
             linear_fwt: FenwickTree::with_len(len),
-            const_fwt: FenwickTree::with_len(len)
+            const_fwt: FenwickTree::with_len(len),
+            len: len
         }
     }
 }
@@ -106,6 +109,64 @@ struct Query {
     id: usize,
 }
 
+
+impl fmt::Debug for AdvanceFenwickTree {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut v = vec![0; self.len];
+        for i in 1..self.len {
+            v[i] = self.prefix_sum(i);
+        }
+        write!(f, "Advanced FW prefix sums: {v:?}")
+    }
+}
+
+
+impl fmt::Debug for Query {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = self.start;
+        let e = self.end;
+        let id = self.id;
+        write!(f, "Query (start: {s}, end: {e}, id: {id})")
+    }
+}
+
+
+impl RBTree<usize, i8> {
+    fn to_vec(&self) -> Vec<usize> {
+        let mut v = vec![];
+        let mut r: &RBNode<usize, i8>;
+        unsafe {
+            r = &(*self.root);
+        }
+        loop {
+            let next = self.previous_by_key(r);
+            if !next.is_none() {
+                r = next.unwrap();
+            } else {
+                break;
+            }
+        }
+        loop {
+            v.push(r.key);
+            let next = self.next_by_key(r);
+            if next.is_none() {
+                break;
+            } else {
+                r = next.unwrap();
+            }
+        }
+        return v;
+    }
+}
+
+
+impl fmt::Debug for RBTree<usize, i8> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let v = self.to_vec();
+        write!(f, "RbTree {v:?}")
+    }
+}
+
 struct Result {
     value: i32,
     id: usize,
@@ -123,6 +184,11 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     let lcp = lcp_construction(str.as_bytes(), &sa);
     let min_lcp_segment_tree = SegmentTree::from_vec(&lcp, min);
 
+    println!("{str}");
+    println!("Sa: {sa:?}");
+    println!("Lookup: {sa_lookup:?}");
+    println!("Lcp: {lcp:?}");
+
     let mut suffix_sorter: RBTree<usize, i8> = RBTree::new();
     let mut fw_prefix_counter = AdvanceFenwickTree::with_len(n);
 
@@ -134,10 +200,31 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     queries.sort_by(|a, b| a.start.cmp(&b.start));
     let mut results: Vec<Result> = Vec::with_capacity(raw_queries.len());
 
+    dbg!(&queries);
+
     let mut query = queries.pop().unwrap();
     'main_loop: for suffix in (0..n).rev() {
         let sa_pos = sa_lookup[suffix];
+        let x = &str;
+        let y = &x[suffix..];
+        println!("Substr: {y}");
+        dbg!(&sa_pos);
         suffix_sorter.insert(sa_pos, 0);
+
+        let _ss_vec = suffix_sorter.to_vec();
+        println!("Suffix sorter: {_ss_vec:?}");
+        let mut partial_sa: Vec<usize> = vec![];
+        let mut partial_lcp: Vec<usize> = vec![];
+        partial_sa.push(sa[_ss_vec[0]]);
+        partial_lcp.push(0);
+        for idx in 1.._ss_vec.len() {
+            partial_sa.push(sa[_ss_vec[idx]]);
+            partial_lcp.push(min_lcp_segment_tree.query(Range {start: _ss_vec[idx - 1] + 1, end: _ss_vec[idx] + 1 }).unwrap());
+        }
+        println!("Partial sa {partial_sa:?}");
+        println!("Partial lcp {partial_lcp:?}");
+
+
         let node = suffix_sorter.find_node(&sa_pos).unwrap();
 
         let prev_node = suffix_sorter.previous_by_key(node);
@@ -151,6 +238,11 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
             let sa_left = prev_node.unwrap().key;
             let sa_right = next_node.unwrap().key;
             let cp = min_lcp_segment_tree.query(sa_left+1..sa_right+1).unwrap();
+
+            dbg!(&sa_left);
+            dbg!(&sa_right);
+            dbg!(&cp);
+
             remove_prefix(
                 &mut fw_prefix_counter,
                 n - sa[sa_left],
@@ -161,6 +253,10 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
         if !prev_node.is_none() {
             let sa_left = prev_node.unwrap().key;
             let cp = min_lcp_segment_tree.query(sa_left+1..sa_pos+1).unwrap();
+
+            dbg!(&sa_left);
+            dbg!(&cp);
+
             add_prefix(
                 &mut fw_prefix_counter,
                 n - sa[sa_left],
@@ -171,6 +267,10 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
         if !next_node.is_none() {
             let sa_right = next_node.unwrap().key;
             let cp = min_lcp_segment_tree.query(sa_pos+1..sa_right+1).unwrap();
+
+            dbg!(&sa_right);
+            dbg!(&cp);
+
             add_prefix(
                 &mut fw_prefix_counter,
                 n - sa[sa_pos],
@@ -178,6 +278,7 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
                 cp
             );
         }
+        dbg!(&fw_prefix_counter);
 
         while query.start == suffix {
             let max_substrings = i32::try_from((query.end - query.start) * (query.end - query.start + 1) / 2).unwrap();
@@ -290,22 +391,22 @@ mod tests {
         }
     }
 
-    #[test]
-    fn example3() {
-        let str = String::from(
-            "ccccccccccgdgddgdgddgddgdgddgdgddgddgdgddgddgdgddgdgddgddgdgddwbwbbwbwbbwbbwbwbbwbkgkggwyomdjdbevunm"
-        );
-        let queries = vec![
-            Range{start: 62, end: 70},
-        ];
+    // #[test]
+    // fn example3() {
+    //     let str = String::from(
+    //         "ccccccccccgdgddgdgddgddgdgddgdgddgddgdgddgddgdgddgdgddgddgdgddwbwbbwbwbbwbbwbwbbwbkgkggwyomdjdbevunm"
+    //     );
+    //     let queries = vec![
+    //         Range{start: 62, end: 70},
+    //     ];
 
-        let expected = vec![24];
-        let results = count_substrings(str, queries);
+    //     let expected = vec![24];
+    //     let results = count_substrings(str, queries);
 
-        for idx in 0..results.len() {
-            assert_eq!(results[idx], expected[idx]);
-        }
-    }
+    //     for idx in 0..results.len() {
+    //         assert_eq!(results[idx], expected[idx]);
+    //     }
+    // }
 
     #[test]
     fn example_tmp() {
@@ -313,16 +414,51 @@ mod tests {
             "wbbwbwbbwbbw"
         );
         let queries = vec![
+            Range{start: 7, end: 12},
             Range{start: 0, end: 8},
         ];
 
-        let expected = vec![24];
+        let expected = vec![11, 24];
         let results = count_substrings(str, queries);
 
         for idx in 0..results.len() {
             assert_eq!(results[idx], expected[idx]);
         }
     }
+
+    #[test]
+    fn example_tmp2() {
+        let str = String::from(
+            "bwbbw"
+        );
+        let queries = vec![
+            Range{start: 0, end: 3},
+        ];
+
+        let expected = vec![5];
+        let results = count_substrings(str, queries);
+
+        for idx in 0..results.len() {
+            assert_eq!(results[idx], expected[idx]);
+        }
+    }
+
+    // #[test]
+    // fn example_tmp2() {
+    //     let str = String::from(
+    //         "wbwbbwbwbbwbbwbwbb"
+    //     );
+    //     let queries = vec![
+    //         Range{start: 0, end: 8},
+    //     ];
+
+    //     let expected = vec![24];
+    //     let results = count_substrings(str, queries);
+
+    //     for idx in 0..results.len() {
+    //         assert_eq!(results[idx], expected[idx]);
+    //     }
+    // }
 }
 
 

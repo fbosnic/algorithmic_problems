@@ -40,7 +40,7 @@ fn lcp_construction(str_bytes: &[u8], suffix_array: &Vec<usize>) -> Vec<usize> {
 fn inverse_permutation(permutation: &Vec<usize>) -> Vec<usize> {
     let n = permutation.len();
     let mut inverse_permutation: Vec<usize> = vec![0; n];
-    for i in 1..n {
+    for i in 0..n {
         inverse_permutation[permutation[i]] = i;
     }
     return inverse_permutation;

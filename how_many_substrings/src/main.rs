@@ -210,6 +210,7 @@ fn main() {
     let (_, q) = parse_line_to_two_numbers();
     let mut str = String::new();
     io::stdin().read_line(&mut str).unwrap();
+    str = (str.trim()).to_string();
 
     let mut queries: Vec<Range<usize>>= vec![];
     for _ in 0..q {

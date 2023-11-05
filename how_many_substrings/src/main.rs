@@ -65,8 +65,11 @@ impl AdvanceFenwickTree {
     }
 
     pub fn prefix_sum(&self, end: usize) -> i32 {
-        let lin_part = self.linear_fwt.prefix_sum(end) * i32::try_from(end).unwrap();
-        let const_part = self.const_fwt.prefix_sum(end);
+        if end == 0 {
+            return 0;
+        }
+        let lin_part = self.linear_fwt.prefix_sum(end - 1) * (i32::try_from(end).unwrap() - 1);
+        let const_part = self.const_fwt.prefix_sum(end - 1);
         return lin_part + const_part;
     }
 
@@ -178,7 +181,7 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
 
         while query.start == suffix {
             let max_substrings = i32::try_from((query.end - query.start) * (query.end - query.start + 1) / 2).unwrap();
-            let res = max_substrings - fw_prefix_counter.prefix_sum(n - query.end);
+            let res = max_substrings - fw_prefix_counter.prefix_sum(n - query.end + 1);
             results.push(Result { value: res, id: query.id });
             match queries.pop() {
                 Some(q) => query = q,

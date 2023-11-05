@@ -286,6 +286,40 @@ mod tests {
             assert_eq!(results[idx], expected[idx]);
         }
     }
+
+    #[test]
+    fn example3() {
+        let str = String::from(
+            "ccccccccccgdgddgdgddgddgdgddgdgddgddgdgddgddgdgddgdgddgddgdgddwbwbbwbwbbwbbwbwbbwbkgkggwyomdjdbevunm"
+        );
+        let queries = vec![
+            Range{start: 62, end: 70},
+        ];
+
+        let expected = vec![24];
+        let results = count_substrings(str, queries);
+
+        for idx in 0..results.len() {
+            assert_eq!(results[idx], expected[idx]);
+        }
+    }
+
+    #[test]
+    fn example_tmp() {
+        let str = String::from(
+            "wbbwbwbbwbbw"
+        );
+        let queries = vec![
+            Range{start: 0, end: 8},
+        ];
+
+        let expected = vec![24];
+        let results = count_substrings(str, queries);
+
+        for idx in 0..results.len() {
+            assert_eq!(results[idx], expected[idx]);
+        }
+    }
 }
 
 

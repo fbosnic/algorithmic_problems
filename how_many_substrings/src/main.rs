@@ -229,7 +229,27 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::count_substrings;
+    use super::SegmentTree;
+    use super::min;
     use std::ops::Range;
+
+    #[test]
+    fn segment_tree_test() {
+        let v: Vec<usize> = vec![11, 12, 13, 24, 0, 16, 7, 8];
+        let s: SegmentTree<usize> = SegmentTree::from_vec(&v, min);
+        let queries: Vec<Range<usize>> = vec![
+            Range{start: 0, end: 4},
+            Range{start: 2, end: 5},
+            Range{start: 4, end: 8},
+            Range{start: 5, end: 6},
+        ];
+        let res: Vec<usize>= vec![11, 0, 0, 16];
+        for i in 0..res.len() {
+            let x = &queries[i];
+            let y = s.query(Range { start: (x.start), end: (x.end) }).unwrap();
+            assert_eq!(y, res[i]);
+        }
+    }
 
     #[test]
     fn example1() {

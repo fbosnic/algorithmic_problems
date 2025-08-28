@@ -5,6 +5,7 @@ use std::ops::{Range, Add, AddAssign, Neg, Mul};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 
+// Hackerrank does not allow importing external packages
 // extern crate algorithms;
 // use algorithms::data_structures::{RBTree, FenwickTree, SegmentTree};
 // use algorithms::string::generate_suffix_array_manber_myers;
@@ -47,13 +48,13 @@ fn inverse_permutation(permutation: &Vec<usize>) -> Vec<usize> {
 }
 
 
-struct AdvanceFenwickTree {
+struct FWTreeWithRangedUpdates {
     linear_fwt: FenwickTree<i32>,
     const_fwt: FenwickTree<i32>
 }
 
 
-impl AdvanceFenwickTree {
+impl FWTreeWithRangedUpdates {
     pub fn add(&mut self, start: usize, end: usize, value: i32) {
         if start >= end {
             return;
@@ -78,25 +79,11 @@ impl AdvanceFenwickTree {
     }
 
     pub fn with_len(len: usize) -> Self {
-        AdvanceFenwickTree {
+        FWTreeWithRangedUpdates {
             linear_fwt: FenwickTree::with_len(len),
             const_fwt: FenwickTree::with_len(len)
         }
     }
-}
-
-fn _update_prefix_counter_with(fw_counter: &mut AdvanceFenwickTree, left_len: usize, right_len: usize, comon_prefix: usize, value: i32) {
-    let min_len = min(left_len, right_len);
-    fw_counter.add(0, 1, value * i32::try_from(comon_prefix).unwrap());
-    fw_counter.add(min_len - comon_prefix + 1, min_len + 1, -value);
-}
-
-fn add_prefix(fw_counter: &mut AdvanceFenwickTree, left_len: usize, right_len: usize, comon_prefix: usize) {
-    _update_prefix_counter_with(fw_counter, left_len, right_len, comon_prefix, 1);
-}
-
-fn remove_prefix(fw_counter: &mut AdvanceFenwickTree, left_len: usize, right_len: usize, comon_prefix: usize) {
-    _update_prefix_counter_with(fw_counter, left_len, right_len, comon_prefix, -1);
 }
 
 
@@ -112,6 +99,39 @@ struct Result {
 }
 
 
+fn find_distinguished_elements(
+    suffix_idx: usize,
+    lcp_seg_tree: &SegmentTree<usize>,
+    sa_seg_tree: &SegmentTree<usize>,
+    sa_lookup: &Vec<usize>,
+) -> Vec<usize> {
+    if suffix_idx == sa_seg_tree.len {
+        return vec![]
+    }
+    else {
+        return vec![]
+    }
+    // TODO
+}
+
+
+fn find_left_limit(
+    min_seg_tree: &SegmentTree<usize>,
+    start: usize,
+    alpha: usize,
+) -> usize {
+    return 0
+}
+
+
+fn find_right_limit(
+    min_seg_tree: &SegmentTree<usize>,
+    start: usize,
+    alpha: usize,
+) -> usize {
+    return 0
+}
+
 fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     let n = str.len();
     if n == 0 {
@@ -122,9 +142,10 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     let sa_lookup = inverse_permutation(&sa);
     let lcp = lcp_construction(str.as_bytes(), &sa);
     let min_lcp_segment_tree = SegmentTree::from_vec(&lcp, min);
+    let partial_sa = vec![n; sa.len()];
+    let min_sa_segment_tree = SegmentTree::from_vec(&partial_sa, min);
 
-    let mut suffix_sorter: RBTree<usize, i8> = RBTree::new();
-    let mut fw_prefix_counter = AdvanceFenwickTree::with_len(n);
+    let mut fw_counter = FWTreeWithRangedUpdates::with_len(n);
 
     let mut queries: Vec<Query> = Vec::with_capacity(raw_queries.len());
     for idx in 0..raw_queries.len() {
@@ -137,51 +158,25 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     let mut query = queries.pop().unwrap();
     'main_loop: for suffix in (0..n).rev() {
         let sa_pos = sa_lookup[suffix];
-        suffix_sorter.insert(sa_pos, 0);
-        let node = suffix_sorter.find_node(&sa_pos).unwrap();
 
-        let prev_node = suffix_sorter.previous_by_key(node);
-        let next_node = suffix_sorter.next_by_key(node);
+        let dist_elements = find_distinguished_elements(
+            suffix, &min_lcp_segment_tree, &min_sa_segment_tree, sa_lookup
+        );
 
-        if suffix == n-1 {
-            continue;
-        }
+        fw_counter.add(suffix, suffix+1,0);
 
-        if !prev_node.is_none() && !next_node.is_none() {
-            let sa_left = prev_node.unwrap().key;
-            let sa_right = next_node.unwrap().key;
-            let cp = min_lcp_segment_tree.query(sa_left+1..sa_right+1).unwrap();
-            remove_prefix(
-                &mut fw_prefix_counter,
-                n - sa[sa_left],
-                n - sa[sa_right],
-                cp
-            );
-        }
-        if !prev_node.is_none() {
-            let sa_left = prev_node.unwrap().key;
-            let cp = min_lcp_segment_tree.query(sa_left+1..sa_pos+1).unwrap();
-            add_prefix(
-                &mut fw_prefix_counter,
-                n - sa[sa_left],
-                n - sa[sa_pos],
-                cp
-            );
-        }
-        if !next_node.is_none() {
-            let sa_right = next_node.unwrap().key;
-            let cp = min_lcp_segment_tree.query(sa_pos+1..sa_right+1).unwrap();
-            add_prefix(
-                &mut fw_prefix_counter,
-                n - sa[sa_pos],
-                n - sa[sa_right],
-                cp
-            );
+        for dist_idx in 0..dist_elements.len() - 1 {
+            let _progressive_lcp = 0;  //TODO
+            fw_counter.add(
+                dist_elements[dist_idx] + _progressive_lcp,
+                dist_elements[dist_idx] + _progressive_lcp,
+                1,
+            )
         }
 
         while query.start == suffix {
             let max_substrings = i32::try_from((query.end - query.start) * (query.end - query.start + 1) / 2).unwrap();
-            let res = max_substrings - fw_prefix_counter.prefix_sum(n - query.end + 1);
+            let res = max_substrings - fw_counter.prefix_sum(n - query.end + 1);
             results.push(Result { value: res, id: query.id });
             match queries.pop() {
                 Some(q) => query = q,

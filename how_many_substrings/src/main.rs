@@ -1,5 +1,5 @@
 use std::io;
-use std::cmp::min;
+use std::cmp::{min,max};
 use std::vec::Vec;
 use std::ops::{Range, Add, AddAssign, Neg, Mul};
 use std::convert::TryFrom;
@@ -108,10 +108,30 @@ fn find_distinguished_elements(
     if suffix_idx == sa_seg_tree.len {
         return vec![]
     }
-    else {
-        return vec![]
+    let pos = sa_lookup[suffix_idx];
+    let mut dist_elements:  Vec<usize> = Vec::with_capacity(lcp_seg_tree.len);
+    let mut lcp_depth: usize = 0;
+    loop {
+        let left = find_left_limit(
+            lcp_seg_tree,
+            pos,
+            lcp_depth,
+        );
+        let right = find_right_limit(
+            lcp_seg_tree,
+            pos,
+            lcp_depth
+        );
+        if left == right {
+            break;
+        }
+        let k = sa_seg_tree.query(Range{ start:left, end:right }).expect("Should never happen");
+        dist_elements.push(k);
+        let a = min(pos, k);
+        let b = max(pos, k);
+        lcp_depth = 1 + lcp_seg_tree.query(Range { start: a, end: b }).expect("Should not happen")
     }
-    // TODO
+    return dist_elements
 }
 
 
@@ -120,7 +140,17 @@ fn find_left_limit(
     start: usize,
     alpha: usize,
 ) -> usize {
-    return 0
+    if start == 0 {
+        return 0usize;
+    }
+    let node = start + min_seg_tree.len;
+    if min_seg_tree.tree[node] < alpha {
+        return start
+    }
+    while (node > 0) & (node % 2 == 1 ) {
+
+    }
+    return 0usize
 }
 
 
@@ -160,7 +190,7 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
         let sa_pos = sa_lookup[suffix];
 
         let dist_elements = find_distinguished_elements(
-            suffix, &min_lcp_segment_tree, &min_sa_segment_tree, sa_lookup
+            suffix, &min_lcp_segment_tree, &min_sa_segment_tree, &sa_lookup
         );
 
         fw_counter.add(suffix, suffix+1,0);

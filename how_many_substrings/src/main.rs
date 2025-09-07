@@ -147,7 +147,7 @@ fn find_left_limit(
     if min_seg_tree.tree[node] < alpha {
         return start
     }
-    while (node > 0) & (node % 2 == 1 ) {
+    while (node > 1) & (node % 2 == 1 ) {
 
     }
     return 0usize

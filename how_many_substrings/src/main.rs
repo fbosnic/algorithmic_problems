@@ -135,6 +135,46 @@ fn find_distinguished_elements(
 }
 
 
+fn is_root(node: usize) -> book {
+    return node == 1;
+}
+
+fn parent(node: usize) -> usize {
+    return node / 2;
+}
+
+fn left_child(node: usize) -> usize {
+    return node * 2;
+}
+
+fn is_left_child(node: usize) -> bool {
+    return node % 2 == 0;
+}
+
+fn right_child(node: usize) -> usize {
+    return node * 2 + 1;
+}
+
+fn is_right_child(node: usize) -> bool {
+    return node % 2 == 1;
+}
+
+fn left_sibling(node: usize) -> usize {
+    return left_child(parent(node));
+}
+
+fn right_sibling(node: usize) -> usize {
+    return right_child(parent(node));
+}
+
+fn point_range(node: usize) -> Range<usize> {
+    return Range { start: node, end: node + 1}
+}
+
+fn is_leaf(node: usize, seg_array_size: usize) -> bool {
+    return (node > seg_array_size) && (node < 2*seg_array_size);
+}
+
 fn find_left_limit(
     min_seg_tree: &SegmentTree<usize>,
     start: usize,

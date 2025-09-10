@@ -183,14 +183,27 @@ fn find_left_limit(
     if start == 0 {
         return 0usize;
     }
-    let node = start + min_seg_tree.len;
+    let mut node = start + min_seg_tree.len;
     if min_seg_tree.tree[node] < alpha {
         return start
     }
-    while (node > 1) & (node % 2 == 1 ) {
-
+    while (! is_root(node)) && (is_left_child(node) || (min_seg_tree.tree[node] >= alpha)) {
+        node = parent(node);
     }
-    return 0usize
+    if is_root(node) {
+        return 0usize;
+    }
+    node = left_sibling(node);
+    while ! is_leaf(node, min_seg_tree.len) {
+        let rc = right_child(node);
+        if min_seg_tree.tree[rc] < alpha {
+            node = rc;
+        }
+        else {
+            node = left_child(node);
+        }
+    }
+    return node + 1;
 }
 
 
@@ -199,7 +212,14 @@ fn find_right_limit(
     start: usize,
     alpha: usize,
 ) -> usize {
-    return 0
+    if start == (min_seg_tree.len - 1) {
+        return min_seg_tree.len - 1;
+    }
+    if min_seg_tree.tree[start + 1] < alpha {
+        return start;
+    }
+    let mut node = start + 1;
+
 }
 
 fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {

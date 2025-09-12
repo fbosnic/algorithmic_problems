@@ -134,8 +134,15 @@ fn find_distinguished_elements(
     return dist_elements
 }
 
+fn get_node_from_index(idx: usize, array_len: usize) -> usize {
+    return idx + array_len
+}
 
-fn is_root(node: usize) -> book {
+fn get_index_from_node(node: usize, array_len: usize) -> usize {
+    return node - array_len;
+}
+
+fn is_root(node: usize) -> bool {
     return node == 1;
 }
 
@@ -183,11 +190,11 @@ fn find_left_limit(
     if start == 0 {
         return 0usize;
     }
-    let mut node = start + min_seg_tree.len;
+    let mut node = get_node_from_index(start, min_seg_tree.len);
     if min_seg_tree.tree[node] < alpha {
         return start
     }
-    while (! is_root(node)) && (is_left_child(node) || (min_seg_tree.tree[node] >= alpha)) {
+    while (! is_root(node)) && (is_left_child(node) || (min_seg_tree.tree[left_sibling(node)] >= alpha)) {
         node = parent(node);
     }
     if is_root(node) {
@@ -203,7 +210,7 @@ fn find_left_limit(
             node = left_child(node);
         }
     }
-    return node + 1;
+    return get_index_from_node(node, min_seg_tree.len) + 1;
 }
 
 
@@ -218,7 +225,22 @@ fn find_right_limit(
     if min_seg_tree.tree[start + 1] < alpha {
         return start;
     }
-    let mut node = start + 1;
+    let mut node = get_node_from_index(start + 1, min_seg_tree.len);
+    while !is_root(node) && ((is_right_child(node)) || (min_seg_tree.tree[right_sibling(node)] >= alpha)) {
+        node = parent(node);
+    }
+    if is_root(node) {
+        return min_seg_tree.len - 1;
+    }
+    node = right_sibling(node);
+    while !is_leaf(node, min_seg_tree.len) {
+        if min_seg_tree.tree[left_child(node)] < alpha {
+            node = left_child(node)
+        }
+        node = right_child(node);
+    }
+    return get_index_from_node(node, min_seg_tree.len) - 1;
+
 
 }
 

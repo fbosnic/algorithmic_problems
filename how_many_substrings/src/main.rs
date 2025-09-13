@@ -104,23 +104,25 @@ fn find_distinguished_elements(
     sa_seg_tree: &SegmentTree<usize>,
     sa_lookup: &Vec<usize>,
 ) -> Vec<usize> {
-    if suffix_idx == sa_seg_tree.len {
+    if suffix_idx == sa_lookup.len() {
         return vec![]
     }
     let pos = sa_lookup[suffix_idx];
-    let mut dist_elements:  Vec<usize> = Vec::with_capacity(lcp_seg_tree.len);
+    let mut dist_elements:  Vec<usize> = Vec::with_capacity(sa_lookup.len());
     let mut lcp_depth: usize = 0;
     loop {
-        let left = find_left_limit(
+        let mut left = find_left_limit(
             lcp_seg_tree,
             pos,
             lcp_depth,
         );
-        let right = find_right_limit(
+        left = max(left, 1);  // The first element in LCP is undefined
+        let mut right = find_right_limit(
             lcp_seg_tree,
             pos,
             lcp_depth
         );
+        right = min(right, sa_lookup.len());  // Segment trees arrays are enlarged to fit the binary tree
         if left == right {
             break;
         }
@@ -248,19 +250,35 @@ struct StringContext {
     sa: Vec<usize>,
     sa_lookup: Vec<usize>,
     lcp: Vec<usize>,
-    min_lcp_segment_tree: SegmentTree<usize>
+    min_lcp_segment_tree: SegmentTree<usize>,
+    partial_sa: Vec<usize>,
+    min_sa_segment_tree: SegmentTree<usize>,
 }
 
 fn get_context(str: String) -> StringContext {
     let sa = generate_suffix_array_manber_myers(&str);
     let sa_lookup = inverse_permutation(&sa);
     let lcp = lcp_construction(str.as_bytes(), &sa);
-    let min_lcp_segment_tree = SegmentTree::from_vec(&lcp, min);
+    let mut _extended_size = 2;
+    while _extended_size < lcp.len() {
+        _extended_size *= 2;
+    }
+    let mut extended_lcp = vec![lcp.len(); _extended_size];
+    extended_lcp[..lcp.len()].copy_from_slice(&lcp);
+    let min_lcp_segment_tree = SegmentTree::from_vec(&extended_lcp, min);
+
+    let partial_sa = vec![str.len(); str.len()];
+    let min_sa_segment_tree = SegmentTree::from_vec(
+        &vec![str.len(); _extended_size],
+        min,
+    );
     return StringContext{
         sa:sa,
         sa_lookup: sa_lookup,
         lcp: lcp,
-        min_lcp_segment_tree: min_lcp_segment_tree
+        min_lcp_segment_tree: min_lcp_segment_tree,
+        partial_sa: partial_sa,
+        min_sa_segment_tree: min_sa_segment_tree,
     }
 }
 
@@ -272,10 +290,14 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     if raw_queries.len() == 0 {
         return vec![];
     }
-    let StringContext {sa, sa_lookup, lcp: _, min_lcp_segment_tree} = get_context(str);
-
-    let partial_sa = vec![n; sa.len()];
-    let min_sa_segment_tree = SegmentTree::from_vec(&partial_sa, min);
+    let StringContext {
+        sa: _,
+        sa_lookup,
+        lcp: _,
+        min_lcp_segment_tree,
+        partial_sa: _,
+        min_sa_segment_tree,
+    } = get_context(str);
 
     let mut fw_counter = FWTreeWithRangedUpdates::with_len(n);
 

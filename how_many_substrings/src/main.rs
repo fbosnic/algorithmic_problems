@@ -240,13 +240,21 @@ fn find_right_limit(
         node = right_child(node);
     }
     return get_index_from_node(node, min_seg_tree.len) - 1;
+}
 
-
+fn interval_query<T>(seg_tree: &SegmentTree<T>, x: usize, y: usize) -> Option<T>
+where
+    T: Copy + Ord + Default + Debug
+{
+    return seg_tree.query(Range{start: min(x, y), end: max(x, y)})
 }
 
 fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     let n = str.len();
     if n == 0 {
+        return vec![];
+    }
+    if raw_queries.len() == 0 {
         return vec![];
     }
 
@@ -275,21 +283,21 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
             suffix, &min_lcp_segment_tree, &min_sa_segment_tree, &sa_lookup
         );
 
-        fw_counter.add(suffix, suffix+1,0);
+        fw_counter.add(suffix, suffix+1,1);
 
         for dist_idx in 0..dist_elements.len() - 1 {
-            let _progressive_lcp = 0;  //TODO
-            fw_counter.add(
-                dist_elements[dist_idx] + _progressive_lcp,
-                dist_elements[dist_idx] + _progressive_lcp,
-                1,
-            )
+            let _progressive_lcp = interval_query(
+                &min_lcp_segment_tree, sa_pos, sa_lookup[dist_elements[dist_idx]]
+            ).unwrap();
+            let _start = dist_elements[dist_idx] + _progressive_lcp;
+            let _end =
+                if dist_idx == dist_elements.len() - 1 { n }
+                else { dist_elements[dist_idx + 1] + _progressive_lcp};
+            fw_counter.add(_start, _end, 1);
         }
 
         while query.start == suffix {
-            let max_substrings = i32::try_from((query.end - query.start) * (query.end - query.start + 1) / 2).unwrap();
-            let res = max_substrings - fw_counter.prefix_sum(n - query.end + 1);
-            results.push(Result { value: res, id: query.id });
+            results.push(Result{value: fw_counter.range_sum(query.start, query.end), id: query.id});
             match queries.pop() {
                 Some(q) => query = q,
                 None => break 'main_loop,

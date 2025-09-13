@@ -437,8 +437,25 @@ mod tests {
 
     #[test]
     fn test_find_distinguished_elements() {
-        let str = String::from("");
-        let StringContext {sa, sa_lookup, lcp: _, min_lcp_segment_tree} = get_context(str);
+        let str = String::from("abcdaababcdabc");
+        let StringContext {
+            sa: _,
+            sa_lookup,
+            lcp: _,
+            min_lcp_segment_tree,
+            partial_sa: _,
+            min_sa_segment_tree,
+        } = get_context(str);
+        let dist_elem = find_distinguished_elements(
+            0,
+            &min_lcp_segment_tree,
+            &min_sa_segment_tree,
+            &sa_lookup,
+        );
+        assert_eq!(dist_elem.len(), 3);
+        assert_eq!(dist_elem[2], 7);
+        assert_eq!(dist_elem[1], 5);
+        assert_eq!(dist_elem[0], 4);
     }
 
     #[test]

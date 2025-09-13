@@ -98,7 +98,6 @@ struct Result {
     id: usize,
 }
 
-
 fn find_distinguished_elements(
     suffix_idx: usize,
     lcp_seg_tree: &SegmentTree<usize>,
@@ -222,10 +221,10 @@ fn find_right_limit(
     if start == (min_seg_tree.len - 1) {
         return min_seg_tree.len - 1;
     }
-    if min_seg_tree.tree[start + 1] < alpha {
+    let mut node = get_node_from_index(start + 1, min_seg_tree.len);
+    if min_seg_tree.tree[node + 1] < alpha {
         return start;
     }
-    let mut node = get_node_from_index(start + 1, min_seg_tree.len);
     while !is_root(node) && ((is_right_child(node)) || (min_seg_tree.tree[right_sibling(node)] >= alpha)) {
         node = parent(node);
     }
@@ -235,7 +234,7 @@ fn find_right_limit(
     node = right_sibling(node);
     while !is_leaf(node, min_seg_tree.len) {
         if min_seg_tree.tree[left_child(node)] < alpha {
-            node = left_child(node)
+            node = left_child(node);
         }
         node = right_child(node);
     }
@@ -249,6 +248,26 @@ where
     return seg_tree.query(Range{start: min(x, y), end: max(x, y)})
 }
 
+struct StringContext {
+    sa: Vec<usize>,
+    sa_lookup: Vec<usize>,
+    lcp: Vec<usize>,
+    min_lcp_segment_tree: SegmentTree<usize>
+}
+
+fn get_context(str: String) -> StringContext {
+    let sa = generate_suffix_array_manber_myers(&str);
+    let sa_lookup = inverse_permutation(&sa);
+    let lcp = lcp_construction(str.as_bytes(), &sa);
+    let min_lcp_segment_tree = SegmentTree::from_vec(&lcp, min);
+    return StringContext{
+        sa:sa,
+        sa_lookup: sa_lookup,
+        lcp: lcp,
+        min_lcp_segment_tree: min_lcp_segment_tree
+    }
+}
+
 fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     let n = str.len();
     if n == 0 {
@@ -257,11 +276,8 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     if raw_queries.len() == 0 {
         return vec![];
     }
+    let StringContext {sa, sa_lookup, lcp: _, min_lcp_segment_tree} = get_context(str);
 
-    let sa = generate_suffix_array_manber_myers(&str);
-    let sa_lookup = inverse_permutation(&sa);
-    let lcp = lcp_construction(str.as_bytes(), &sa);
-    let min_lcp_segment_tree = SegmentTree::from_vec(&lcp, min);
     let partial_sa = vec![n; sa.len()];
     let min_sa_segment_tree = SegmentTree::from_vec(&partial_sa, min);
 
@@ -323,7 +339,6 @@ fn parse_line_to_two_numbers() -> (i32, i32) {
     return (a, b);
 }
 
-
 fn main() {
     let (_, q) = parse_line_to_two_numbers();
     let mut str = String::new();
@@ -348,7 +363,10 @@ fn main() {
 mod tests {
     use super::count_substrings;
     use super::SegmentTree;
+    use super::{StringContext, get_context};
     use super::min;
+    use super::{find_left_limit, find_right_limit};
+    use super::find_distinguished_elements;
     use std::ops::Range;
 
     #[test]
@@ -367,6 +385,45 @@ mod tests {
             let y = s.query(Range { start: (x.start), end: (x.end) }).unwrap();
             assert_eq!(y, res[i]);
         }
+    }
+
+    #[test]
+    fn test_find_left_limit() {
+        let lcp: Vec<usize> = vec![5, 5, 4, 3, 2, 3, 4, 4, 1, 5, 5, 5, 5];
+        let min_seg_tree = SegmentTree::from_vec(&lcp, min);
+        let left_1= find_left_limit(&min_seg_tree, 10, 3);
+        assert_eq!(left_1, 9);
+        let left_2 = find_left_limit(&min_seg_tree, 6, 3);
+        assert_eq!(left_2, 5);
+        let left_3 = find_left_limit(&min_seg_tree, 5, 3);
+        assert_eq!(left_3, 5);
+        let left_4 = find_left_limit(&min_seg_tree, 2, 0);
+        assert_eq!(left_4, 0);
+        let left_5= find_left_limit(&min_seg_tree, lcp.len() - 1, 3);
+        assert_eq!(left_5, 9);
+    }
+
+    #[test]
+    fn test_find_right_limit() {
+        let lcp: Vec<usize> = vec![5, 5, 4, 5, 2, 3, 4, 4, 1, 5, 5, 5, 5];
+        let min_seg_tree = SegmentTree::from_vec(&lcp, min);
+        let right_1= find_right_limit(&min_seg_tree, 10, 4);
+        assert_eq!(right_1, lcp.len() - 1);
+        let right_2 = find_right_limit(&min_seg_tree, 6, 3);
+        assert_eq!(right_2, 7);
+        let right_3 = find_right_limit(&min_seg_tree, 3, 3);
+        ert_eq!(right_3, 3);
+        let right_4 = find_right_limit(&min_seg_tree, 0, 3);
+        dbg!(&min_seg_tree.tree);
+        assert_eq!(right_4, 3);  // The problem is that the array has to be power of 2 for the segment tree to work!!!
+        let right_5 = find_right_limit(&min_seg_tree, 1, 3);
+        assert_eq!(right_5, 3);
+    }
+
+    #[test]
+    fn test_find_distinguished_elements() {
+        let str = String::from("");
+        let StringContext {sa, sa_lookup, lcp: _, min_lcp_segment_tree} = get_context(str);
     }
 
     #[test]

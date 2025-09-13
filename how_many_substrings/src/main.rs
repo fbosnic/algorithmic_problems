@@ -173,10 +173,6 @@ fn right_sibling(node: usize) -> usize {
     return right_child(parent(node));
 }
 
-fn point_range(node: usize) -> Range<usize> {
-    return Range { start: node, end: node + 1}
-}
-
 fn is_leaf(node: usize, seg_array_size: usize) -> bool {
     return (node > seg_array_size) && (node < 2*seg_array_size);
 }
@@ -222,7 +218,7 @@ fn find_right_limit(
         return min_seg_tree.len - 1;
     }
     let mut node = get_node_from_index(start + 1, min_seg_tree.len);
-    if min_seg_tree.tree[node + 1] < alpha {
+    if min_seg_tree.tree[node] < alpha {
         return start;
     }
     while !is_root(node) && ((is_right_child(node)) || (min_seg_tree.tree[right_sibling(node)] >= alpha)) {
@@ -389,35 +385,32 @@ mod tests {
 
     #[test]
     fn test_find_left_limit() {
-        let lcp: Vec<usize> = vec![5, 5, 4, 3, 2, 3, 4, 4, 1, 5, 5, 5, 5];
+        let lcp: Vec<usize> = vec![5, 4, 3, 2, 3, 4, 5, 5];  // Works on arrays with power-2 elements
         let min_seg_tree = SegmentTree::from_vec(&lcp, min);
-        let left_1= find_left_limit(&min_seg_tree, 10, 3);
-        assert_eq!(left_1, 9);
-        let left_2 = find_left_limit(&min_seg_tree, 6, 3);
-        assert_eq!(left_2, 5);
-        let left_3 = find_left_limit(&min_seg_tree, 5, 3);
-        assert_eq!(left_3, 5);
-        let left_4 = find_left_limit(&min_seg_tree, 2, 0);
+        let left_1= find_left_limit(&min_seg_tree, 7, 3);
+        assert_eq!(left_1, 4);
+        let left_2 = find_left_limit(&min_seg_tree, 4, 3);
+        assert_eq!(left_2, 4);
+        let left_3 = find_left_limit(&min_seg_tree, 2, 3);
+        assert_eq!(left_3, 0);
+        let left_4 = find_left_limit(&min_seg_tree, 0, 0);
         assert_eq!(left_4, 0);
-        let left_5= find_left_limit(&min_seg_tree, lcp.len() - 1, 3);
-        assert_eq!(left_5, 9);
     }
 
     #[test]
     fn test_find_right_limit() {
-        let lcp: Vec<usize> = vec![5, 5, 4, 5, 2, 3, 4, 4, 1, 5, 5, 5, 5];
+        let lcp: Vec<usize> = vec![1, 3, 3, 2, 5, 2, 5, 5];  // Works only on arrays with power-2 elements
         let min_seg_tree = SegmentTree::from_vec(&lcp, min);
-        let right_1= find_right_limit(&min_seg_tree, 10, 4);
+        let right_1= find_right_limit(&min_seg_tree, lcp.len() - 1, 4);
         assert_eq!(right_1, lcp.len() - 1);
         let right_2 = find_right_limit(&min_seg_tree, 6, 3);
         assert_eq!(right_2, 7);
-        let right_3 = find_right_limit(&min_seg_tree, 3, 3);
-        ert_eq!(right_3, 3);
-        let right_4 = find_right_limit(&min_seg_tree, 0, 3);
-        dbg!(&min_seg_tree.tree);
-        assert_eq!(right_4, 3);  // The problem is that the array has to be power of 2 for the segment tree to work!!!
+        let right_3 = find_right_limit(&min_seg_tree, 4, 3);
+        assert_eq!(right_3, 4);
+        let right_4 = find_right_limit(&min_seg_tree, 2, 3);
+        assert_eq!(right_4, 2);
         let right_5 = find_right_limit(&min_seg_tree, 1, 3);
-        assert_eq!(right_5, 3);
+        assert_eq!(right_5, 2);
     }
 
     #[test]

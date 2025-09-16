@@ -104,7 +104,7 @@ fn find_distinguished_elements(
     sa_seg_tree: &SegmentTree<usize>,
     sa_lookup: &Vec<usize>,
 ) -> Vec<usize> {
-    if suffix_idx == sa_lookup.len() {
+    if suffix_idx == sa_lookup.len() - 1 {
         return vec![]
     }
     let pos = sa_lookup[suffix_idx];
@@ -126,11 +126,11 @@ fn find_distinguished_elements(
         if left == right {
             break;
         }
-        let k = sa_seg_tree.query(Range{ start:left, end:right }).expect("Should never happen");
+        let k = sa_seg_tree.query(Range{ start:left - 1, end:right + 1 }).expect("Should never happen");
         dist_elements.push(k);
-        let a = min(pos, k);
-        let b = max(pos, k);
-        lcp_depth = 1 + lcp_seg_tree.query(Range { start: a, end: b }).expect("Should not happen")
+        let a = min(pos, sa_lookup[k]);
+        let b = max(pos, sa_lookup[k]);
+        lcp_depth = 1 + lcp_seg_tree.query(Range { start: a + 1, end: b + 1}).expect("Should not happen");
     }
     return dist_elements
 }
@@ -176,7 +176,7 @@ fn right_sibling(node: usize) -> usize {
 }
 
 fn is_leaf(node: usize, seg_array_size: usize) -> bool {
-    return (node > seg_array_size) && (node < 2*seg_array_size);
+    return (node >= seg_array_size) && (node < 2 * seg_array_size);
 }
 
 fn find_left_limit(
@@ -191,14 +191,14 @@ fn find_left_limit(
     if min_seg_tree.tree[node] < alpha {
         return start
     }
-    while (! is_root(node)) && (is_left_child(node) || (min_seg_tree.tree[left_sibling(node)] >= alpha)) {
+    while (!is_root(node)) && (is_left_child(node) || (min_seg_tree.tree[left_sibling(node)] >= alpha)) {
         node = parent(node);
     }
     if is_root(node) {
         return 0usize;
     }
     node = left_sibling(node);
-    while ! is_leaf(node, min_seg_tree.len) {
+    while !is_leaf(node, min_seg_tree.len) {
         let rc = right_child(node);
         if min_seg_tree.tree[rc] < alpha {
             node = rc;
@@ -296,7 +296,7 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
         lcp: _,
         min_lcp_segment_tree,
         partial_sa: _,
-        min_sa_segment_tree,
+        mut min_sa_segment_tree,
     } = get_context(str);
 
     let mut fw_counter = FWTreeWithRangedUpdates::with_len(n);
@@ -337,6 +337,7 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
                 None => break 'main_loop,
             };
         }
+        min_sa_segment_tree.update(sa_pos, suffix);
     }
     results.sort_by_key(|r| r.id);
 
@@ -439,23 +440,27 @@ mod tests {
     fn test_find_distinguished_elements() {
         let str = String::from("abcdaababcdabc");
         let StringContext {
-            sa: _,
+            sa,
             sa_lookup,
-            lcp: _,
+            lcp,
             min_lcp_segment_tree,
             partial_sa: _,
-            min_sa_segment_tree,
+            mut min_sa_segment_tree,
         } = get_context(str);
+        for suffix in (1..sa_lookup.len() - 1).rev() {
+            min_sa_segment_tree.update(sa_lookup[suffix], suffix);
+        }
         let dist_elem = find_distinguished_elements(
             0,
             &min_lcp_segment_tree,
             &min_sa_segment_tree,
             &sa_lookup,
         );
-        assert_eq!(dist_elem.len(), 3);
-        assert_eq!(dist_elem[2], 7);
-        assert_eq!(dist_elem[1], 5);
-        assert_eq!(dist_elem[0], 4);
+        assert_eq!(dist_elem.len(), 4);
+        assert_eq!(dist_elem[0], 1);
+        assert_eq!(dist_elem[1], 4);
+        assert_eq!(dist_elem[2], 5);
+        assert_eq!(dist_elem[3], 7);
     }
 
     #[test]

@@ -513,9 +513,12 @@ mod tests {
         );
         let queries = vec![
             Range{start: 62, end: 70},
+            Range{start: 0, end: 6},
+            Range{start: 0, end: 10},
+            Range{start: 8, end: 12},
         ];
 
-        let expected = vec![24];
+        let expected = vec![24, 6, 10, 9];
         let results = count_substrings(str, queries);
 
         for idx in 0..results.len() {

@@ -236,8 +236,9 @@ fn find_right_limit(
     while !is_leaf(node, min_seg_tree.len) {
         if min_seg_tree.tree[left_child(node)] < alpha {
             node = left_child(node);
+        } else {
+            node = right_child(node);
         }
-        node = right_child(node);
     }
     return get_index_from_node(node, min_seg_tree.len) - 1;
 }

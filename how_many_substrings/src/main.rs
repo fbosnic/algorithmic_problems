@@ -123,10 +123,13 @@ fn find_distinguished_elements(
             lcp_depth
         );
         right = min(right, sa_lookup.len());  // Segment trees arrays are enlarged to fit the binary tree
-        if left == right {
+        if left > right {
             break;
         }
         let k = sa_seg_tree.query(Range{ start:left - 1, end:right + 1 }).expect("Should never happen");
+        if k >= sa_lookup.len() {  // The segment array is not filled at these positions
+            break;
+        }
         dist_elements.push(k);
         let a = min(pos, sa_lookup[k]);
         let b = max(pos, sa_lookup[k]);
@@ -184,12 +187,12 @@ fn find_left_limit(
     start: usize,
     alpha: usize,
 ) -> usize {
-    if start == 0 {
-        return 0usize;
-    }
+    // if start == 0 {
+    //     return 1;
+    // }
     let mut node = get_node_from_index(start, min_seg_tree.len);
     if min_seg_tree.tree[node] < alpha {
-        return start
+        return start + 1  // LCP array is shifted to the right
     }
     while (!is_root(node)) && (is_left_child(node) || (min_seg_tree.tree[left_sibling(node)] >= alpha)) {
         node = parent(node);
@@ -239,12 +242,6 @@ fn find_right_limit(
     return get_index_from_node(node, min_seg_tree.len) - 1;
 }
 
-fn interval_query<T>(seg_tree: &SegmentTree<T>, x: usize, y: usize) -> Option<T>
-where
-    T: Copy + Ord + Default + Debug
-{
-    return seg_tree.query(Range{start: min(x, y), end: max(x, y)})
-}
 
 struct StringContext {
     sa: Vec<usize>,
@@ -291,7 +288,7 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
         return vec![];
     }
     let StringContext {
-        sa: _,
+        sa,
         sa_lookup,
         lcp: _,
         min_lcp_segment_tree,
@@ -319,16 +316,22 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
 
         fw_counter.add(suffix, suffix+1,1);
 
-        for dist_idx in 0..dist_elements.len() - 1 {
-            let _progressive_lcp = interval_query(
-                &min_lcp_segment_tree, sa_pos, sa_lookup[dist_elements[dist_idx]]
-            ).unwrap();
+        for dist_idx in 0..dist_elements.len() {
+            let _dist_sa_pos = sa_lookup[dist_elements[dist_idx]];
+            let a = min(sa_pos, _dist_sa_pos) + 1;
+            let b = max(sa_pos, _dist_sa_pos) + 1;
+            let _progressive_lcp = min_lcp_segment_tree.query(Range{start:a, end:b}).unwrap();
             let _start = dist_elements[dist_idx] + _progressive_lcp;
             let _end =
                 if dist_idx == dist_elements.len() - 1 { n }
                 else { dist_elements[dist_idx + 1] + _progressive_lcp};
             fw_counter.add(_start, _end, 1);
         }
+        // let mut counts:Vec<i32> = vec![0; n];
+        // for idx in suffix..n {
+        //     counts[idx] = fw_counter.range_sum(suffix, idx+1);
+        // }
+        // dbg!(&counts);
 
         while query.start == suffix {
             results.push(Result{value: fw_counter.range_sum(query.start, query.end), id: query.id});
@@ -418,6 +421,8 @@ mod tests {
         assert_eq!(left_3, 0);
         let left_4 = find_left_limit(&min_seg_tree, 0, 0);
         assert_eq!(left_4, 0);
+        let left_5 = find_left_limit(&min_seg_tree, 2, 4);
+        assert_eq!(left_5, 3);
     }
 
     #[test]
@@ -489,9 +494,10 @@ mod tests {
             Range{start: 1, end: 5},
             Range{start: 1, end: 2},
             Range{start: 1, end: 5},
+            Range{start: 2, end: 4},
             Range{start: 0, end: 3},
         ];
-        let expected = vec![1, 8, 1, 8, 5];
+        let expected = vec![1, 8, 1, 8, 3, 5];
         let results = count_substrings(str, queries);
 
         for idx in 0..results.len() {

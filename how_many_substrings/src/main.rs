@@ -49,32 +49,32 @@ fn inverse_permutation(permutation: &Vec<usize>) -> Vec<usize> {
 
 
 struct FWTreeWithRangedUpdates {
-    linear_fwt: FenwickTree<i32>,
-    const_fwt: FenwickTree<i32>
+    linear_fwt: FenwickTree<i64>,
+    const_fwt: FenwickTree<i64>
 }
 
 
 impl FWTreeWithRangedUpdates {
-    pub fn add(&mut self, start: usize, end: usize, value: i32) {
+    pub fn add(&mut self, start: usize, end: usize, value: i64) {
         if start >= end {
             return;
         }
         self.linear_fwt.add(start, value);
         self.linear_fwt.add(end, -value);
-        self.const_fwt.add(start, -value * (i32::try_from(start).unwrap() - 1));
-        self.const_fwt.add(end, value * (i32::try_from(end).unwrap() - 1));
+        self.const_fwt.add(start, -value * (i64::try_from(start).unwrap() - 1));
+        self.const_fwt.add(end, value * (i64::try_from(end).unwrap() - 1));
     }
 
-    pub fn prefix_sum(&self, end: usize) -> i32 {
+    pub fn prefix_sum(&self, end: usize) -> i64 {
         if end == 0 {
             return 0;
         }
-        let lin_part = self.linear_fwt.prefix_sum(end - 1) * (i32::try_from(end).unwrap() - 1);
+        let lin_part = self.linear_fwt.prefix_sum(end - 1) * (i64::try_from(end).unwrap() - 1);
         let const_part = self.const_fwt.prefix_sum(end - 1);
         return lin_part + const_part;
     }
 
-    pub fn range_sum(&self, start: usize, end:usize) -> i32 {
+    pub fn range_sum(&self, start: usize, end:usize) -> i64 {
         return self.prefix_sum(end) + (- self.prefix_sum(start));
     }
 
@@ -94,7 +94,7 @@ struct Query {
 }
 
 struct Result {
-    value: i32,
+    value: i64,
     id: usize,
 }
 
@@ -280,7 +280,7 @@ fn get_context(str: String) -> StringContext {
     }
 }
 
-fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
+fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i64> {
     let n = str.len();
     if n == 0 {
         return vec![];
@@ -345,7 +345,7 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
     }
     results.sort_by_key(|r| r.id);
 
-    let mut output: Vec<i32> = Vec::with_capacity(results.len());
+    let mut output: Vec<i64> = Vec::with_capacity(results.len());
     for r in results {
         output.push(r.value);
     }
@@ -353,12 +353,12 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i32> {
 }
 
 
-fn parse_line_to_two_numbers() -> (i32, i32) {
+fn parse_line_to_two_numbers() -> (i64, i64) {
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
     let _tuple_sizes: Vec<&str> = line.split(" ").collect();
-    let a = _tuple_sizes[0].trim().parse::<i32>().unwrap();
-    let b = _tuple_sizes[1].trim().parse::<i32>().unwrap();
+    let a = _tuple_sizes[0].trim().parse::<i64>().unwrap();
+    let b = _tuple_sizes[1].trim().parse::<i64>().unwrap();
     return (a, b);
 }
 

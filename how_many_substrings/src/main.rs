@@ -187,9 +187,6 @@ fn find_left_limit(
     start: usize,
     alpha: usize,
 ) -> usize {
-    // if start == 0 {
-    //     return 1;
-    // }
     let mut node = get_node_from_index(start, min_seg_tree.len);
     if min_seg_tree.tree[node] < alpha {
         return start + 1  // LCP array is shifted to the right
@@ -328,11 +325,6 @@ fn count_substrings(str: String, raw_queries: Vec<Range<usize>>) -> Vec<i64> {
                 else { dist_elements[dist_idx + 1] + _progressive_lcp};
             fw_counter.add(_start, _end, 1);
         }
-        // let mut counts:Vec<i32> = vec![0; n];
-        // for idx in suffix..n {
-        //     counts[idx] = fw_counter.range_sum(suffix, idx+1);
-        // }
-        // dbg!(&counts);
 
         while query.start == suffix {
             results.push(Result{value: fw_counter.range_sum(query.start, query.end), id: query.id});

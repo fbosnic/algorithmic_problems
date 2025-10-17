@@ -1,0 +1,8 @@
+[package]
+name = "codeforces_problems"
+version = "0.1.0"
+include = ["src"]
+
+[[bin]]
+name = "the_least_round_way"
+path = "src/the_least_round_way.rs"

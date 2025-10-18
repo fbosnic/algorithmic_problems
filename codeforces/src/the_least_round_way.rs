@@ -1,6 +1,3 @@
-use std::ops::Deref;
-
-
 pub struct SquaerMatrix<T: Default + Copy> {
     _vector: Vec<T>,
     size: usize,
@@ -20,13 +17,14 @@ impl<T: Default + Copy> SquaerMatrix<T> {
         self._vector[i * self.size + j] = value;
     }
 
-    pub fn apply(&self, func: fn(&T) -> T) {
+    pub fn apply(&self, func: fn(&T) -> T) -> Self {
         let mut new_matrix = SquaerMatrix::<T>::new(self.size);
         for i in 0..self.size {
             for j in 0..self.size {
                 new_matrix.set(i, j, func(&self.at(i, j)));
             }
         }
+        return new_matrix;
     }
 }
 
@@ -60,9 +58,10 @@ fn count_power_of_factor(n: i32, factor: i32) -> i32 {
 }
 
 
-fn compute_minimal_weight_path(weight_matrix: &SquaerMatrix<i32>) -> SquaerMatrix<i32> {
-    let mut dynamic_path_weight = SquaerMatrix::<i32>::new(weight_matrix.size);
-    let mut dynamic_previous_cell: SquaerMatrix<char> = SquaerMatrix::<char>::new(weight_matrix.size);
+fn compute_minimal_weight_path(weight_matrix: &SquaerMatrix<i32>) -> (i32, String) {
+    let n = weight_matrix.size;
+    let mut dynamic_path_weight = SquaerMatrix::<i32>::new(n);
+    let mut dynamic_previous_cell: SquaerMatrix<char> = SquaerMatrix::<char>::new(n);
     for row in 0..dynamic_path_weight.size {
         for col in 0..dynamic_path_weight.size {
             let weight = weight_matrix.at(row, col);
@@ -94,15 +93,93 @@ fn compute_minimal_weight_path(weight_matrix: &SquaerMatrix<i32>) -> SquaerMatri
             }
         }
     }
-    return dynamic_path_weight
+    let mut path = String::new();
+    let (mut x, mut y) = (n - 1, n - 1);
+    while (x, y) != (0, 0) {
+        match dynamic_previous_cell.at(x, y) {
+            'L' => {
+                path.push('R');
+                y -= 1;
+            }
+            'U' => {
+                path.push('D');
+                x -= 1;
+            }
+            _ => panic!("Invalid content of cell"),
+        }
+    }
+    path = path.chars().rev().collect();
+    return (dynamic_path_weight.at(n - 1, n - 1), path)
 }
 
 
 
-fn main() {
-    let matrix = read_input();
+fn find_least_round_way(matrix: SquaerMatrix<i32>) -> (i32, String) {
+    let n = matrix.size;
     let matrix_2_factors = matrix.apply(|&x| count_power_of_factor(x, 2));
     let matrix_5_factors = matrix.apply(|&x| count_power_of_factor(x, 5));
 
-    return std::cmp::min(v1, v2)
+    let (min_weight_2, path_2) = compute_minimal_weight_path(&matrix_2_factors);
+    let (min_weight_5, path_5) = compute_minimal_weight_path(&matrix_5_factors);
+    if min_weight_2 < min_weight_5 {
+        return (min_weight_2, path_2);
+    } else {
+        return (min_weight_5, path_5);
+    }
+}
+
+fn main() {
+    let matrix = read_input();
+    let (minimal_trailing_zeros, path) = find_least_round_way(matrix);
+    println!("{}", minimal_trailing_zeros);
+    println!("{}", path);
+}
+
+
+// Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_count_power_of_factor() {
+        assert_eq!(count_power_of_factor(200, 2), 3);
+        assert_eq!(count_power_of_factor(50, 5), 2);
+    }
+
+    #[test]
+    fn test_compute_minimal_weight_path() {
+        let data = vec![
+            vec![0, 1, 7],
+            vec![2, 2, 3],
+            vec![3, 8, 0],
+        ];
+        let mut matrix = SquaerMatrix::<i32>::new(3);
+        for row in 0..3 {
+            for col in 0..3 {
+                matrix.set(row, col, data[row][col]);
+            }
+        }
+        let (minimal_weight, path) = compute_minimal_weight_path(&matrix);
+        assert_eq!(minimal_weight, 6);
+        assert_eq!(path, "RDRD");
+    }
+
+    #[test]
+    fn test_least_round_way() {
+        let data = vec![
+            vec![1, 2, 3],
+            vec![4, 5, 6],
+            vec![7, 8, 9],
+        ];
+        let mut matrix = SquaerMatrix::<i32>::new(3);
+        for row in 0..3 {
+            for col in 0..3 {
+                matrix.set(row, col, data[row][col]);
+            }
+        }
+        let (minimal_trailing_zeros, path) = find_least_round_way(matrix);
+        assert_eq!(minimal_trailing_zeros, 0);
+        assert_eq!(path, "RRDD");
+    }
 }

@@ -115,7 +115,6 @@ fn compute_minimal_weight_path(weight_matrix: &SquaerMatrix<i32>) -> (i32, Strin
 
 
 fn find_least_round_way(matrix: SquaerMatrix<i32>) -> (i32, String) {
-    let n = matrix.size;
     let matrix_2_factors = matrix.apply(|&x| count_power_of_factor(x, 2));
     let matrix_5_factors = matrix.apply(|&x| count_power_of_factor(x, 5));
 

@@ -29,18 +29,18 @@ impl<T: Default + Copy> SquaerMatrix<T> {
 }
 
 
-fn read_input() -> SquaerMatrix<i32> {
+fn read_input() -> SquaerMatrix<i64> {
     let mut size_line = String::new();
     std::io::stdin().read_line(&mut size_line).unwrap();
     let n = size_line.trim().parse::<usize>().unwrap();
-    let mut matrix = SquaerMatrix::<i32>::new(n as usize);
+    let mut matrix = SquaerMatrix::<i64>::new(n as usize);
     for row in 0..n {
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
         let numbers: Vec<&str> = input.trim().split_whitespace().collect();
         assert!(numbers.len() == n as usize);
         for idx in 0..numbers.len(){
-            let x = numbers[idx].parse::<i32>().unwrap();
+            let x = numbers[idx].parse::<i64>().unwrap();
             if x < 1 {
                 println!("Matrix imput not positive - found {x}");
                 panic!("Input must be positive");
@@ -52,7 +52,7 @@ fn read_input() -> SquaerMatrix<i32> {
 }
 
 
-fn count_power_of_factor(n: i32, factor: i32) -> i32 {
+fn count_power_of_factor(n: i64, factor: i64) -> i64 {
     let mut n = n;
     let mut count = 0;
     while n % factor == 0 {
@@ -63,9 +63,9 @@ fn count_power_of_factor(n: i32, factor: i32) -> i32 {
 }
 
 
-fn compute_minimal_weight_path(weight_matrix: &SquaerMatrix<i32>) -> (i32, String) {
+fn compute_minimal_weight_path(weight_matrix: &SquaerMatrix<i64>) -> (i64, String) {
     let n = weight_matrix.size;
-    let mut dynamic_path_weight = SquaerMatrix::<i32>::new(n);
+    let mut dynamic_path_weight = SquaerMatrix::<i64>::new(n);
     let mut dynamic_previous_cell: SquaerMatrix<char> = SquaerMatrix::<char>::new(n);
     for row in 0..dynamic_path_weight.size {
         for col in 0..dynamic_path_weight.size {
@@ -119,7 +119,7 @@ fn compute_minimal_weight_path(weight_matrix: &SquaerMatrix<i32>) -> (i32, Strin
 
 
 
-fn find_least_round_way(matrix: SquaerMatrix<i32>) -> (i32, String) {
+fn find_least_round_way(matrix: SquaerMatrix<i64>) -> (i64, String) {
     let matrix_2_factors = matrix.apply(|&x| count_power_of_factor(x, 2));
     let matrix_5_factors = matrix.apply(|&x| count_power_of_factor(x, 5));
 
@@ -158,7 +158,7 @@ mod tests {
             vec![2, 2, 3],
             vec![3, 8, 0],
         ];
-        let mut matrix = SquaerMatrix::<i32>::new(3);
+        let mut matrix = SquaerMatrix::<i64>::new(3);
         for row in 0..3 {
             for col in 0..3 {
                 matrix.set(row, col, data[row][col]);
@@ -176,7 +176,7 @@ mod tests {
             vec![4, 5, 6],
             vec![7, 8, 9],
         ];
-        let mut matrix = SquaerMatrix::<i32>::new(3);
+        let mut matrix = SquaerMatrix::<i64>::new(3);
         for row in 0..3 {
             for col in 0..3 {
                 matrix.set(row, col, data[row][col]);

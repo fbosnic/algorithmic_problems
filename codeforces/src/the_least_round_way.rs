@@ -40,7 +40,9 @@ fn read_input() -> SquaerMatrix<i32> {
         let numbers: Vec<&str> = input.trim().split_whitespace().collect();
         assert!(numbers.len() == n as usize);
         for idx in 0..numbers.len(){
-            matrix.set(row, idx, numbers[idx].parse::<i32>().unwrap());
+            let x = numbers[idx].parse::<i32>().unwrap();
+            assert!(x >= 1);
+            matrix.set(row, idx, x);
         }
     }
     return matrix

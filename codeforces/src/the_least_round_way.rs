@@ -41,7 +41,10 @@ fn read_input() -> SquaerMatrix<i32> {
         assert!(numbers.len() == n as usize);
         for idx in 0..numbers.len(){
             let x = numbers[idx].parse::<i32>().unwrap();
-            assert!(x >= 1);
+            if x < 1 {
+                println!("Matrix imput not positive - found {x}");
+                panic!("Input must be positive");
+            }
             matrix.set(row, idx, x);
         }
     }

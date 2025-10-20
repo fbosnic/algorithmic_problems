@@ -41,8 +41,8 @@ fn read_input() -> SquaerMatrix<i64> {
         assert!(numbers.len() == n as usize);
         for idx in 0..numbers.len(){
             let x = numbers[idx].parse::<i64>().unwrap();
-            if x < 1 {
-                println!("Matrix imput not positive - found {x}");
+            if x < 0 {
+                println!("Matrix input negative - found {x}");
                 panic!("Input must be positive");
             }
             matrix.set(row, idx, x);
@@ -55,6 +55,9 @@ fn read_input() -> SquaerMatrix<i64> {
 fn count_power_of_factor(n: i64, factor: i64) -> i64 {
     let mut n = n;
     let mut count = 0;
+    if n == 0 {
+        return 1;
+    }
     while n % factor == 0 {
         count += 1;
         n /= factor;
@@ -125,11 +128,39 @@ fn find_least_round_way(matrix: SquaerMatrix<i64>) -> (i64, String) {
 
     let (min_weight_2, path_2) = compute_minimal_weight_path(&matrix_2_factors);
     let (min_weight_5, path_5) = compute_minimal_weight_path(&matrix_5_factors);
-    if min_weight_2 < min_weight_5 {
-        return (min_weight_2, path_2);
+    let (mut min_weight, mut min_path) = if min_weight_2 < min_weight_5 {
+        (min_weight_2, path_2)
     } else {
-        return (min_weight_5, path_5);
+        (min_weight_5, path_5)
+    };
+
+    let mut coords_of_zero : (usize, usize) = (matrix.size, matrix.size);
+    'outer: for row in 0..matrix.size {
+        for col in 0..matrix.size {
+            if matrix.at(row, col) == 0 {
+                coords_of_zero = (row, col);
+                break 'outer;
+            }
+        }
     }
+    if (min_weight > 1) && (coords_of_zero != (matrix.size, matrix.size)) {
+        min_weight = 1;
+        let mut path = String::new();
+        for _ in 0..coords_of_zero.0 {
+            path.push('D');
+        }
+        for _ in 0..coords_of_zero.1 {
+            path.push('R');
+        }
+        for _ in coords_of_zero.0..(matrix.size - 1) {
+            path.push('D');
+        }
+        for _ in coords_of_zero.1..(matrix.size - 1) {
+            path.push('R');
+        }
+        min_path = path;
+    }
+    return (min_weight, min_path);
 }
 
 fn main() {
@@ -185,5 +216,24 @@ mod tests {
         let (minimal_trailing_zeros, path) = find_least_round_way(matrix);
         assert_eq!(minimal_trailing_zeros, 0);
         assert_eq!(path, "RRDD");
+    }
+
+    #[test]
+    fn test_least_round_way_with_zero() {
+        let data = vec![
+            vec![5, 2, 2, 5],
+            vec![2, 0, 1, 1],
+            vec![5, 2, 10, 10],
+            vec![5, 2, 10, 10],
+        ];
+        let mut matrix = SquaerMatrix::<i64>::new(4);
+        for row in 0..4 {
+            for col in 0..4 {
+                matrix.set(row, col, data[row][col]);
+            }
+        }
+        let (minimal_trailing_zeros, path) = find_least_round_way(matrix);
+        assert_eq!(minimal_trailing_zeros, 1);
+        assert_eq!(path, "DRDDRR");
     }
 }

@@ -6,3 +6,7 @@ include = ["src"]
 [[bin]]
 name = "the_least_round_way"
 path = "src/the_least_round_way.rs"
+
+[[bin]]
+name = "ciel_the_commander"
+path = "src/ciel_the_commander.rs"

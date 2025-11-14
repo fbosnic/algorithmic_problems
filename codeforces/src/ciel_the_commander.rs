@@ -69,12 +69,12 @@ fn solve<T: Read + BufRead>(input_stream: &mut T) -> String {
     }
     while node_queue.len() > 0 {
         let node_idx = node_queue.pop_front().unwrap();
-        for &neighbour in graph.neighbours(node_idx) {
-            if assigments[neighbour] != 0 {
+        for &neighbour_idx in graph.neighbours(node_idx) {
+            if assigments[neighbour_idx] != 0 {
                 continue;
             }
-            assigments[neighbour] = assigments[node_idx] + 1;
-            node_queue.push_back(neighbour);
+            assigments[neighbour_idx] = assigments[node_idx] + 1;
+            node_queue.push_back(neighbour_idx);
         }
     }
     let max_rank: i32 = *assigments.iter().max().unwrap();
@@ -106,6 +106,11 @@ mod tests {
         let input = "4\n1 2\n1 3\n1 4   \n".as_bytes();
         let mut input_stream = std::io::BufReader::new(input);
         let result: String = super::solve(& mut input_stream);
-        assert_eq!(result, "A B B A");
+        assert_eq!(result, "A B B B");
+    }
+
+    #[test]
+    fn advanced_example() {
+        let
     }
 }

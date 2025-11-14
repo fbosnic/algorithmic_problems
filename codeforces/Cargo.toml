@@ -10,3 +10,7 @@ path = "src/the_least_round_way.rs"
 [[bin]]
 name = "ciel_the_commander"
 path = "src/ciel_the_commander.rs"
+
+[[bin]]
+name = "carrots_for_rabbits"
+path = "src/carrots_for_rabbits.rs"

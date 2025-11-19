@@ -108,9 +108,4 @@ mod tests {
         let result: String = super::solve(& mut input_stream);
         assert_eq!(result, "A B B B");
     }
-
-    #[test]
-    fn advanced_example() {
-        let
-    }
 }

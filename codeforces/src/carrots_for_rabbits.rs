@@ -2,7 +2,7 @@ use std::io::{stdin, Read, BufRead};
 use std::collections::BinaryHeap;
 
 
-fn read_input<T: Read + BufRead>(input_stream: &mut T) -> (usize, usize, Vec<i32>) {
+fn read_input<T: Read + BufRead>(input_stream: &mut T) -> (usize, usize, Vec<i64>) {
     let mut line= String::new();
     input_stream.read_line(&mut line).unwrap();
     let _parts = line.trim().split_whitespace()
@@ -13,7 +13,7 @@ fn read_input<T: Read + BufRead>(input_stream: &mut T) -> (usize, usize, Vec<i32
     let mut line = String::new();
     input_stream.read_line(&mut line).unwrap();
     let array = line.trim().split_whitespace()
-        .map(|x| x.parse::<i32>().unwrap()).collect::<Vec<i32>>();
+        .map(|x| x.parse::<i64>().unwrap()).collect::<Vec<i64>>();
     assert_eq!(array.len(), n);
     return (n, k, array);
 }
@@ -21,7 +21,7 @@ fn read_input<T: Read + BufRead>(input_stream: &mut T) -> (usize, usize, Vec<i32
 
 struct CarrotCutImprovement {
     carrot_idx: usize,
-    time_decrease: i32,
+    time_decrease: i64,
 }
 
 
@@ -49,21 +49,21 @@ impl Ord for CarrotCutImprovement {
 }
 
 
-fn compute_carrot_eat_time(carrot_size: i32, num_cuts: i32) -> i32 {
+fn compute_carrot_eat_time(carrot_size: i64, num_cuts: i64) -> i64 {
     let reminder = carrot_size % (num_cuts + 1);
     return (carrot_size - reminder).pow(2) / (num_cuts + 1)
         + 2 * (carrot_size - reminder) * reminder / (num_cuts + 1) + reminder;
 }
 
 
-fn compute_decrease_for_cut(carrot_size: i32, num_initial_cuts: i32) -> i32 {
+fn compute_decrease_for_cut(carrot_size: i64, num_initial_cuts: i64) -> i64 {
     return compute_carrot_eat_time(carrot_size, num_initial_cuts)
         - compute_carrot_eat_time(carrot_size, num_initial_cuts + 1);
 }
 
 
-fn compute_eat_time_for_rabbits(n: usize, k: usize, carrots: Vec<i32>) -> i32 {
-    let mut cuts: Vec<i32> = vec![0; n];
+fn compute_eat_time_for_rabbits(n: usize, k: usize, carrots: Vec<i64>) -> i64 {
+    let mut cuts: Vec<i64> = vec![0; n];
     let mut heap: BinaryHeap<CarrotCutImprovement> = BinaryHeap::with_capacity(n);
     for idx in 0..n {
         heap.push(CarrotCutImprovement {
@@ -91,7 +91,7 @@ fn compute_eat_time_for_rabbits(n: usize, k: usize, carrots: Vec<i32>) -> i32 {
 }
 
 
-fn solve<T: Read + BufRead>(input_stream: &mut T) -> i32{
+fn solve<T: Read + BufRead>(input_stream: &mut T) -> i64{
     let (n, k, carrots) = read_input(input_stream);
     return compute_eat_time_for_rabbits(n, k, carrots);
 }

@@ -1,4 +1,3 @@
-use std::num;
 use std::io::{stdin, Read, BufRead};
 use std::collections::BinaryHeap;
 
@@ -11,6 +10,7 @@ fn read_input<T: Read + BufRead>(input_stream: &mut T) -> (usize, usize, Vec<i32
     let n = _parts[0];
     let k = _parts[1];
 
+    let mut line = String::new();
     input_stream.read_line(&mut line).unwrap();
     let array = line.trim().split_whitespace()
         .map(|x| x.parse::<i32>().unwrap()).collect::<Vec<i32>>();
@@ -22,7 +22,6 @@ fn read_input<T: Read + BufRead>(input_stream: &mut T) -> (usize, usize, Vec<i32
 struct CarrotCutImprovement {
     carrot_idx: usize,
     time_decrease: i32,
-    num_cuts: i32,
 }
 
 
@@ -63,23 +62,44 @@ fn compute_decrease_for_cut(carrot_size: i32, num_initial_cuts: i32) -> i32 {
 }
 
 
-fn compute_eat_time_for_rabbits(n: usize, k: usize, mut carrots: Vec<i32>) -> i32 {
-    let cuts: Vec<i32> = vec![0; n];
-    let sorted_carrots = carrots.sort();
-    let heat: BinaryHeap<CarrotCutImprovement> = BinaryHeap::with_capacity(n);
-    return 0;
+fn compute_eat_time_for_rabbits(n: usize, k: usize, carrots: Vec<i32>) -> i32 {
+    let mut cuts: Vec<i32> = vec![0; n];
+    let mut heap: BinaryHeap<CarrotCutImprovement> = BinaryHeap::with_capacity(n);
+    for idx in 0..n {
+        heap.push(CarrotCutImprovement {
+            carrot_idx: idx,
+            time_decrease: compute_decrease_for_cut(carrots[idx], cuts[idx]),
+        });
+    }
+    for _ in 0..(k - n) {
+        let max_element = heap.pop().unwrap();
+        let carrot_idx = max_element.carrot_idx;
+        cuts[max_element.carrot_idx] += 1;
+        heap.push(
+            CarrotCutImprovement {
+                carrot_idx: max_element.carrot_idx,
+                time_decrease: compute_decrease_for_cut(carrots[carrot_idx], cuts[carrot_idx]),
+            }
+        );
+    }
+
+    let mut total_eat_time = 0;
+    for idx in 0..n {
+        total_eat_time += compute_carrot_eat_time(carrots[idx], cuts[idx]);
+    }
+    return total_eat_time;
 }
 
 
-fn solve<T: Read + BufRead>(input_stream: &mut T) -> i32 {
+fn solve<T: Read + BufRead>(input_stream: &mut T) -> i32{
     let (n, k, carrots) = read_input(input_stream);
-    compute_eat_time_for_rabbits(n, k, carrots);
-    return 0;
+    return compute_eat_time_for_rabbits(n, k, carrots);
 }
 
 
 fn main() {
-    solve(& mut stdin().lock());
+    let result = solve(& mut stdin().lock());
+    println!("{}", result);
 }
 
 
@@ -101,5 +121,13 @@ mod tests {
         let mut input_stream = std::io::BufReader::new(input);
         let solution = solve(& mut input_stream);
         assert_eq!(solution, 15);
+    }
+
+    #[test]
+    fn example2() {
+        let input = "1 4\n 19 ".as_bytes();
+        let mut input_stream = std::io::BufReader::new(input);
+        let solution = solve(& mut input_stream);
+        assert_eq!(solution, 91);
     }
 }

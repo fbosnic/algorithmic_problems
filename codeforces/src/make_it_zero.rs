@@ -1,4 +1,6 @@
 /// Solution to codeforces problem 2124E https://codeforces.com/problemset/problem/2124/E'''
+use std::io::{stdin, Read, BufRead};
+use std::ops::{Add, Sub};
 
 
 struct TestCase {
@@ -26,11 +28,11 @@ fn read_test_case<T: Read + BufRead>(input_stream: &mut T) -> TestCase {
 }
 
 
-fn read_input<T: Read + BufRead>(input_stream: &mut T) -> (usize, usize) {
+fn read_input<T: Read + BufRead>(input_stream: &mut T) -> Vec<TestCase> {
     let mut line = String::new();
     input_stream.read_line(&mut line).unwrap();
     let num_lines = line.trim().parse::<usize>().unwrap();
-    let mut test_cases = Vec<TestCase>::new();
+    let mut test_cases = Vec::new();
     for _ in 0..num_lines {
         test_cases.push(read_test_case(input_stream));
     }
@@ -52,14 +54,12 @@ fn sub<T: Sub<Output = T> + Copy>(a: Vec<T>, b: Vec<T>) -> Vec<T> {
 
 fn solve<T: Read + BufRead>(input_stream: &mut T) -> Vec<SolvedCase> {
     let test_cases = read_input(input_stream);
-    for tc in test_cases {
-        println!("{}", tc.array.iter().sum::<i64>());
-    }
+    return Vec::new();
 }
 
 
 fn main() {
-
+    solve(&mut stdin().lock());
 }
 
 
@@ -81,7 +81,7 @@ mod tests {
         assert_eq!(solution[2].num_steps, 2);
 
         let mut result = vec![0; 4];
-        for step_array in solution[2].step_arrays {
+        for step_array in solution[2].step_arrays.clone() {
             result = add(result, step_array);
         }
         assert_eq!(result, vec![5, 3, 1, 5]);

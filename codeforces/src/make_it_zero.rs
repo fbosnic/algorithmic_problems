@@ -45,12 +45,12 @@ fn add<T: Add<Output = T> + Copy>(a: Vec<T>, b: Vec<T>) -> Vec<T> {
 }
 
 
-fn sub<T: Sub<Output = T> + Copy>(a: Vec<T>, b: Vec<T>) -> Vec<T> {
+fn sub<T: Sub<Output = T> + Copy>(a: &Vec<T>, b: &Vec<T>) -> Vec<T> {
     assert_eq!(a.len(), b.len());
     return a.iter().zip(b.iter()).map(|(x, y)| *x - *y).collect();
 }
 
-fn compute_mass(array: Vec<i64>, left_idx: usize, right_idx: usize) -> i64 {
+fn compute_mass(array: &Vec<i64>, left_idx: usize, right_idx: usize) -> i64 {
     let mut mass = 0;
     for idx in left_idx..right_idx {
         mass += array[idx];
@@ -58,11 +58,11 @@ fn compute_mass(array: Vec<i64>, left_idx: usize, right_idx: usize) -> i64 {
     return mass;
 }
 
-fn _max_element(array: Vec<i64>) -> i64 {
+fn _max_element(array: &Vec<i64>) -> i64 {
     return *array.iter().max().unwrap();
 }
 
-fn _find_half_mass(array: Vec<i64>, left_idx: usize, mass: i64) -> usize {
+fn _find_half_mass(array: &Vec<i64>, left_idx: usize, mass: i64) -> usize {
     let mut mass_to_the_left = 0;
     for idx in left_idx..array.len() {
         if 2 * (mass_to_the_left + array[idx]) > mass {
@@ -77,15 +77,16 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
     let mut array = test_case.array.clone();
     let mut steps_array:Vec<Vec<i64>> = vec![];
 
-    let mut total_mass: i64 = compute_mass(array, 0, array.len());
-    let mut max_element: i64 = _max_element(array);
+    let mut total_mass: i64 = compute_mass(&array, 0, array.len());
+    let max_element: i64 = _max_element(&array);
     if (total_mass % 2 == 1) || (total_mass < 2 * max_element) {
         return SolvedCase { num_steps: -1, step_arrays: Vec::new() };
     }
 
     while total_mass > 0 {
-        let left_half_idx = _find_half_mass(array, 0, total_mass);
-        let left_mass = compute_mass(array, 0, left_half_idx);
+        total_mass = compute_mass(&array, 0, array.len());
+        let left_half_idx = _find_half_mass(&array, 0, total_mass);
+        let left_mass = compute_mass(&array, 0, left_half_idx);
         if 2 * left_mass == total_mass {
             let s_array = array.clone();
             steps_array.push(s_array);
@@ -96,8 +97,8 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
             s_array[idx] = array[idx];
         }
         let remaining_mass = total_mass - 2 * left_mass;
-        let next_mid_idx = _find_half_mass(array, left_half_idx, remaining_mass);
-        let middle_mass = compute_mass(array, left_half_idx, next_mid_idx);
+        let next_mid_idx = _find_half_mass(&array, left_half_idx, remaining_mass);
+        let middle_mass = compute_mass(&array, left_half_idx, next_mid_idx);
         if array[next_mid_idx] - left_mass > remaining_mass - middle_mass {
             s_array[next_mid_idx] = left_mass;
         }
@@ -130,8 +131,8 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
                 }
             }
         }
+        array = sub(&array, &s_array);
         steps_array.push(s_array);
-        array = sub(array, s_array);
     }
 
     return SolvedCase { num_steps: steps_array.len() as i32, step_arrays: steps_array };
@@ -140,6 +141,10 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
 
 fn solve<T: Read + BufRead>(input_stream: &mut T) -> Vec<SolvedCase> {
     let test_cases = read_input(input_stream);
+    let mut results: Vec<SolvedCase> = vec![];
+    for tc in test_cases {
+        results.push(solve_test_case(tc));
+    }
     return Vec::new();
 }
 

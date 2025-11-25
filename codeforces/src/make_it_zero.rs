@@ -150,8 +150,23 @@ fn solve<T: Read + BufRead>(input_stream: &mut T) -> Vec<SolvedCase> {
 }
 
 
+fn print_result(results: Vec<SolvedCase>) {
+    for result in results {
+        println!("{}", result.num_steps);
+        if result.num_steps == -1 {
+            continue;
+        }
+        for step_array in result.step_arrays {
+            let s = step_array.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(" ");
+            println!("{s}");
+        }
+    }
+}
+
+
 fn main() {
-    solve(&mut stdin().lock());
+    let results = solve(&mut stdin().lock());
+    print_result(results);
 }
 
 

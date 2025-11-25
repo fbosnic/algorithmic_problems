@@ -96,14 +96,14 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
         for idx in 0..left_half_idx {
             s_array[idx] = array[idx];
         }
-        let remaining_mass = total_mass - 2 * left_mass;
+        let remaining_mass = total_mass - left_mass;
         let next_mid_idx = _find_half_mass(&array, left_half_idx, remaining_mass);
         let middle_mass = compute_mass(&array, left_half_idx, next_mid_idx);
-        if array[next_mid_idx] - left_mass > remaining_mass - middle_mass {
+        if 2 * middle_mass < remaining_mass - left_mass {
             s_array[next_mid_idx] = left_mass;
         }
         else {
-            s_array[next_mid_idx] = array[next_mid_idx] - (remaining_mass - middle_mass);
+            s_array[next_mid_idx] = remaining_mass - 2 * middle_mass;
             let to_distribute = left_mass - s_array[next_mid_idx];
             assert_eq!(to_distribute % 2, 0);
             let mut _to_distribut_left = to_distribute / 2;
@@ -121,12 +121,13 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
             }
 
             for idx in next_mid_idx..array.len() {
-                if array[idx] < _to_distribute_right {
-                    _to_distribute_right -= array[idx];
-                    s_array[idx] = array[idx];
+                let mut _updated_array_value = array[idx] - s_array[idx];
+                if _updated_array_value < _to_distribute_right {
+                    _to_distribute_right -= _updated_array_value;
+                    s_array[idx] += _updated_array_value;
                 }
                 else {
-                    s_array[idx] = _to_distribute_right;
+                    s_array[idx] += _to_distribute_right;
                     _to_distribute_right = 0;
                 }
             }
@@ -145,7 +146,7 @@ fn solve<T: Read + BufRead>(input_stream: &mut T) -> Vec<SolvedCase> {
     for tc in test_cases {
         results.push(solve_test_case(tc));
     }
-    return Vec::new();
+    return results;
 }
 
 

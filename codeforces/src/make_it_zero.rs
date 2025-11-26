@@ -1,10 +1,9 @@
 /// Solution to codeforces problem 2124E https://codeforces.com/problemset/problem/2124/E'''
-use std::io::{stdin, Read, BufRead};
+use std::io::{stdin, Read, BufRead, Write, stdout};
 use std::ops::{Add, Sub};
 
 
 struct TestCase {
-    size: usize,
     array: Vec<i64>,
 }
 
@@ -23,7 +22,7 @@ fn read_test_case<T: Read + BufRead>(input_stream: &mut T) -> TestCase {
     let array = line.trim().split_whitespace()
         .map(|x| x.parse::<i64>().unwrap()).collect::<Vec<i64>>();
     assert_eq!(array.len(), size);
-    return TestCase { size, array };
+    return TestCase { array };
 }
 
 
@@ -150,15 +149,15 @@ fn solve<T: Read + BufRead>(input_stream: &mut T) -> Vec<SolvedCase> {
 }
 
 
-fn print_result(results: Vec<SolvedCase>) {
+fn print_result<T: Write>(results: Vec<SolvedCase>, output_stream: &mut T) {
     for result in results {
-        println!("{}", result.num_steps);
+        write!(output_stream, "{}\n", result.num_steps).unwrap();
         if result.num_steps == -1 {
             continue;
         }
         for step_array in result.step_arrays {
             let s = step_array.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(" ");
-            println!("{s}");
+            write!(output_stream, "{s}\n").unwrap();
         }
     }
 }
@@ -166,7 +165,7 @@ fn print_result(results: Vec<SolvedCase>) {
 
 fn main() {
     let results = solve(&mut stdin().lock());
-    print_result(results);
+    print_result(results, &mut stdout().lock());
 }
 
 
@@ -192,5 +191,15 @@ mod tests {
             result = add(result, step_array);
         }
         assert_eq!(result, vec![5, 3, 1, 5]);
+    }
+
+    #[test]
+    fn test_output() {
+        let mut input_stream = "3\n3\n1 2 3\n2\n2 5\n6\n5 5 2 2 1 1".as_bytes();
+        let solution = solve(&mut input_stream);
+        let mut output_stream = Vec::new();
+        print_result(solution, &mut output_stream);
+        let output_string = String::from_utf8(output_stream).unwrap();
+        assert_eq!(output_string, "1\n1 2 3\n-1\n2\n5 2 2 1 0 0\n0 3 0 1 1 1\n");
     }
 }

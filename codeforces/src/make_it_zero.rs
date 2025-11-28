@@ -64,10 +64,10 @@ fn _max_element(array: &Vec<i64>) -> i64 {
 fn _find_half_mass(array: &Vec<i64>, left_idx: usize, mass: i64) -> usize {
     let mut mass_to_the_left = 0;
     for idx in left_idx..array.len() {
-        if 2 * (mass_to_the_left + array[idx]) > mass {
+        mass_to_the_left += array[idx];
+        if 2 * mass_to_the_left > mass {
             return idx;
         }
-        mass_to_the_left += array[idx];
     }
     return array.len();
 }
@@ -82,8 +82,9 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
         return SolvedCase { num_steps: -1, step_arrays: Vec::new() };
     }
 
+    assert_ne!(total_mass, 0);
     while total_mass > 0 {
-        total_mass = compute_mass(&array, 0, array.len());
+        dbg!(&array);
         let left_half_idx = _find_half_mass(&array, 0, total_mass);
         let left_mass = compute_mass(&array, 0, left_half_idx);
         if 2 * left_mass == total_mass {
@@ -98,13 +99,12 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
         let remaining_mass = total_mass - left_mass;
         let next_mid_idx = _find_half_mass(&array, left_half_idx, remaining_mass);
         let middle_mass = compute_mass(&array, left_half_idx, next_mid_idx);
-        if 2 * middle_mass < remaining_mass - left_mass {
+        if 2 * middle_mass <= remaining_mass - left_mass {
             s_array[next_mid_idx] = left_mass;
         }
         else {
             s_array[next_mid_idx] = remaining_mass - 2 * middle_mass;
             let to_distribute = left_mass - s_array[next_mid_idx];
-            assert_eq!(to_distribute % 2, 0);
             let mut _to_distribut_left = to_distribute / 2;
             let mut _to_distribute_right = to_distribute / 2;
 
@@ -116,6 +116,7 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
                 else {
                     s_array[idx] = _to_distribut_left;
                     _to_distribut_left = 0;
+                    break;
                 }
             }
 
@@ -128,10 +129,14 @@ fn solve_test_case(test_case: TestCase) -> SolvedCase {
                 else {
                     s_array[idx] += _to_distribute_right;
                     _to_distribute_right = 0;
+                    break;
                 }
             }
         }
+        dbg!(&s_array);
+        assert_ne!(s_array, vec![0; array.len()], "Sub array is all zeros");
         array = sub(&array, &s_array);
+        total_mass = compute_mass(&array, 0, array.len());
         steps_array.push(s_array);
     }
 

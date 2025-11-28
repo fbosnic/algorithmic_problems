@@ -194,6 +194,22 @@ mod tests {
     }
 
     #[test]
+    fn test_large_input() {
+        let input = vec![100, 100, 2, 2, 50, 2, 2, 20];
+        let mut input_string = input.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(" ");
+        input_string = format!("1\n{}\n{}\n", input.len(), input_string);
+        let mut input_stream = input_string.as_bytes();
+        let solution = solve(&mut input_stream);
+        let mut result = vec![0; 8];
+        for sa in solution[0].step_arrays.iter() {
+            dbg!(sa);
+            result = add(result, sa.clone());
+        }
+        assert_eq!(result, input);
+    }
+
+
+    #[test]
     fn test_output() {
         let mut input_stream = "3\n3\n1 2 3\n2\n2 5\n6\n5 5 2 2 1 1".as_bytes();
         let solution = solve(&mut input_stream);

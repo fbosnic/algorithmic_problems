@@ -73,74 +73,42 @@ fn _find_half_mass(array: &Vec<i64>, left_idx: usize, mass: i64) -> usize {
 }
 
 fn solve_test_case(test_case: TestCase) -> SolvedCase {
-    let mut array = test_case.array.clone();
-    let mut steps_array:Vec<Vec<i64>> = vec![];
+    let array = test_case.array.clone();
 
-    let mut total_mass: i64 = compute_mass(&array, 0, array.len());
+    let total_mass: i64 = compute_mass(&array, 0, array.len());
     let max_element: i64 = _max_element(&array);
     if (total_mass % 2 == 1) || (total_mass < 2 * max_element) {
         return SolvedCase { num_steps: -1, step_arrays: Vec::new() };
     }
 
-    assert_ne!(total_mass, 0);
-    while total_mass > 0 {
-        dbg!(&array);
-        let left_half_idx = _find_half_mass(&array, 0, total_mass);
-        let left_mass = compute_mass(&array, 0, left_half_idx);
-        if 2 * left_mass == total_mass {
-            let s_array = array.clone();
-            steps_array.push(s_array);
-            break;
-        }
-        let mut s_array = vec![0; array.len()];
-        for idx in 0..left_half_idx {
-            s_array[idx] = array[idx];
-        }
-        let remaining_mass = total_mass - left_mass;
-        let next_mid_idx = _find_half_mass(&array, left_half_idx, remaining_mass);
-        let middle_mass = compute_mass(&array, left_half_idx, next_mid_idx);
-        if 2 * middle_mass <= remaining_mass - left_mass {
-            s_array[next_mid_idx] = left_mass;
-        }
-        else {
-            s_array[next_mid_idx] = remaining_mass - 2 * middle_mass;
-            let to_distribute = left_mass - s_array[next_mid_idx];
-            let mut _to_distribut_left = to_distribute / 2;
-            let mut _to_distribute_right = to_distribute / 2;
-
-            for idx in left_half_idx..next_mid_idx {
-                if array[idx] < _to_distribut_left {
-                    _to_distribut_left -= array[idx];
-                    s_array[idx] = array[idx];
-                }
-                else {
-                    s_array[idx] = _to_distribut_left;
-                    _to_distribut_left = 0;
-                    break;
-                }
-            }
-
-            for idx in next_mid_idx..array.len() {
-                let mut _updated_array_value = array[idx] - s_array[idx];
-                if _updated_array_value < _to_distribute_right {
-                    _to_distribute_right -= _updated_array_value;
-                    s_array[idx] += _updated_array_value;
-                }
-                else {
-                    s_array[idx] += _to_distribute_right;
-                    _to_distribute_right = 0;
-                    break;
-                }
-            }
-        }
-        dbg!(&s_array);
-        assert_ne!(s_array, vec![0; array.len()], "Sub array is all zeros");
-        array = sub(&array, &s_array);
-        total_mass = compute_mass(&array, 0, array.len());
-        steps_array.push(s_array);
+    let mut sub_array = vec![0; array.len()];
+    let middle_idx = _find_half_mass(&array, 0, total_mass);
+    let left_mass = compute_mass(&array, 0, middle_idx);
+    if 2 * left_mass == total_mass {
+        let s_array = array.clone();
+        return SolvedCase { num_steps: 1, step_arrays: vec![s_array] };
     }
 
-    return SolvedCase { num_steps: steps_array.len() as i32, step_arrays: steps_array };
+    let right_mass = total_mass - left_mass - array[middle_idx];
+
+    let mut to_redistribute = (left_mass + array[middle_idx] - right_mass) / 2;
+    sub_array[middle_idx] = to_redistribute;
+    for idx in 0..middle_idx {
+        if array[idx] < to_redistribute {
+            to_redistribute -= array[idx];
+            sub_array[idx] = array[idx];
+        }
+        else {
+            sub_array[idx] = to_redistribute;
+            break;
+        }
+    }
+
+    let reminder = sub(&array, &sub_array);
+    return SolvedCase {
+        num_steps: 2,
+        step_arrays: vec![sub_array, reminder],
+     };
 }
 
 
@@ -221,6 +189,6 @@ mod tests {
         let mut output_stream = Vec::new();
         print_result(solution, &mut output_stream);
         let output_string = String::from_utf8(output_stream).unwrap();
-        assert_eq!(output_string, "1\n1 2 3\n-1\n2\n5 2 2 1 0 0\n0 3 0 1 1 1\n");
+        assert_eq!(output_string, "1\n1 2 3\n-1\n2\n2 2 0 0 0 0\n3 3 2 2 1 1\n");
     }
 }

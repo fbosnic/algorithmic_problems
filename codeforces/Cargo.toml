@@ -18,3 +18,7 @@ path = "src/carrots_for_rabbits.rs"
 [[bin]]
 name = "make_it_zero"
 path = "src/make_it_zero.rs"
+
+[[bin]]
+name = "i_yearn_for_the_mines"
+path = "src/i_yearn_for_the_mines.rs"

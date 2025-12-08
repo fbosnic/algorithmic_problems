@@ -1,22 +1,24 @@
 // Solution to the codeforces problem https://codeforces.com/problemset/problem/2133/E
 
 use std::io::{stdin, Read, BufRead};
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 
 struct Node {
-    neighbours: HashSet<usize>,
+    neighbours: BTreeSet<usize>,
 }
+
 
 struct Graph {
     nodes: Vec<Node>,
 }
 
+
 impl Graph {
     pub fn create_disconnected_graph(n: usize) -> Self {
         let mut nodes = Vec::with_capacity(n);
         for _ in 0..n {
-            nodes.push(Node { neighbours: HashSet::new() });
+            nodes.push(Node { neighbours: BTreeSet::new() });
         }
         return Graph { nodes };
     }
@@ -26,7 +28,7 @@ impl Graph {
         self.nodes[v].neighbours.insert(u);
     }
 
-    pub fn neighbours(&self, u: usize) -> &HashSet<usize> {
+    pub fn neighbours(&self, u: usize) -> &BTreeSet<usize> {
         return &self.nodes[u].neighbours;
     }
 
@@ -41,10 +43,37 @@ impl Graph {
     }
 
     pub fn destroy_edges_connected_to_node(&mut self, u: usize) {
-        for &v in self.nodes[u].neighbours.iter() {
+        for v in self.nodes[u].neighbours.clone() {
             self.nodes[v].neighbours.remove(&u);
         }
         self.nodes[u].neighbours.clear();
+    }
+
+    pub fn dfs_tour(&self, start: usize) -> Vec<usize> {
+        let mut parent_queue = vec![self.nodes.len()];  // Need an additional node not in the graph
+        let mut stack = vec![start];
+        let mut tour = vec![];
+        while stack.len() > 0 {
+            let u = stack.pop().unwrap();
+            tour.push(u);
+            if *parent_queue.last().unwrap() == u {
+                parent_queue.pop();
+            }
+            else if self.neighbours(u).len() == 1 {
+                tour.push(u);
+            }
+            else {
+                stack.push(u);
+                for &v in self.neighbours(u) {
+                    if v != *parent_queue.last().unwrap() {
+                        stack.push(v);
+                    }
+                }
+                parent_queue.push(u);
+            }
+            dbg!(&tour);
+        }
+        return tour;
     }
 }
 
@@ -101,14 +130,40 @@ fn read_input<T: Read + BufRead>(input_stream: &mut T) -> Vec<Graph> {
 }
 
 
-fn solve_test_case(test_case: Graph) -> Vec<SolvedCase>{
-
+fn solve_test_case(graph: &Graph) -> SolvedCase {
+    let mut steps = Vec::new();
+    return SolvedCase { steps };
 }
 
 
 fn main() {
     let test_cases = read_input(&mut stdin().lock());
     for tc in test_cases {
-        println!("{}", solve_test_case(tc));
+        let solution = solve_test_case(&tc);
+        println!("{}", solution.steps.len());
+        for step in solution.steps {
+            println!("{}", step.to_string());
+        }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dfs_tour() {
+        let mut graph = Graph::create_disconnected_graph(9);
+        graph.add_edge(0, 1);
+        graph.add_edge(0, 2);
+        graph.add_edge(1, 3);
+        graph.add_edge(1, 4);
+        graph.add_edge(3, 5);
+        graph.add_edge(3, 6);
+        graph.add_edge(2, 7);
+        graph.add_edge(2, 8);
+        let tour = graph.dfs_tour(0);
+        assert_eq!(tour, vec![0, 2, 8, 8, 7, 7, 2, 1, 4, 4, 3, 6, 6, 5, 5, 3, 1, 0]);
     }
 }

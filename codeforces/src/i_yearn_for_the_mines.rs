@@ -4,11 +4,13 @@ use std::io::{stdin, Read, BufRead};
 use std::collections::BTreeSet;
 
 
+#[derive(Clone)]
 struct Node {
     neighbours: BTreeSet<usize>,
 }
 
 
+#[derive(Clone)]
 struct Graph {
     nodes: Vec<Node>,
 }
@@ -35,7 +37,7 @@ impl Graph {
     pub fn leaves(&self) -> Vec<usize> {
         let mut leaves = Vec::new();
         for (i, node) in self.nodes.iter().enumerate() {
-            if node.neighbours.len() == 1 {
+            if node.neighbours.len() <= 1 {
                 leaves.push(i);
             }
         }
@@ -130,16 +132,58 @@ fn read_input<T: Read + BufRead>(input_stream: &mut T) -> Vec<Graph> {
 }
 
 
-fn solve_test_case(graph: &Graph) -> SolvedCase {
-    let mut steps = Vec::new();
-    return SolvedCase { steps };
+fn solve_test_case(graph: &mut Graph) -> SolvedCase {
+    let mut actions_to_take = Vec::new();
+    let start = graph.leaves()[0];
+    let tour = graph.dfs_tour(start);
+    let mut stack = Vec::new();
+    for node in tour {
+        if stack.len() < 2 {
+            break;
+        }
+        stack.pop();
+        let parent = *stack.last().unwrap();
+        if graph.neighbours(node).len() == 3 {
+            actions_to_take.push(Action { action_type: ActionType::DESTROY, node_idx: parent });
+            graph.destroy_edges_connected_to_node(parent);
+
+        } else if graph.neighbours(node).len() > 1 {
+            actions_to_take.push(Action { action_type: ActionType::DESTROY, node_idx: node });
+            graph.destroy_edges_connected_to_node(parent);
+        }
+    }
+
+    let mut investigated = BTreeSet::new();
+    for l in graph.leaves() {
+        if investigated.contains(&l) {
+            continue;
+        }
+        actions_to_take.push(Action { action_type: ActionType::INSPECT, node_idx: l });
+        if graph.neighbours(l).len() == 0 {
+            continue;
+        }
+        let mut previous = l;
+        let mut current = *graph.neighbours(l).iter().next().unwrap();
+        loop {
+            actions_to_take.push(Action { action_type: ActionType::INSPECT, node_idx: current });
+            investigated.insert(current);
+            if graph.neighbours(current).len() == 1 {
+                break;
+            }
+            let next = *graph.neighbours(current).iter().find(|&&x| x != previous).unwrap();
+            previous = current;
+            current = next;
+        }
+    }
+
+    return SolvedCase { steps: actions_to_take };
 }
 
 
 fn main() {
-    let test_cases = read_input(&mut stdin().lock());
-    for tc in test_cases {
-        let solution = solve_test_case(&tc);
+    let mut test_cases = read_input(&mut stdin().lock());
+    for tc in test_cases.iter_mut() {
+        let solution = solve_test_case(tc);
         println!("{}", solution.steps.len());
         for step in solution.steps {
             println!("{}", step.to_string());
@@ -166,4 +210,55 @@ mod tests {
         let tour = graph.dfs_tour(0);
         assert_eq!(tour, vec![0, 2, 8, 8, 7, 7, 2, 1, 4, 4, 3, 6, 6, 5, 5, 3, 1, 0]);
     }
+
+    fn _assert_valid_solution(graph: &Graph, solution: &SolvedCase) {
+        assert!(solution.steps.len() <= 5 * graph.nodes.len() / 4);
+        let mut first_inspect_idx = 0;
+        for action in &solution.steps {
+            match action.action_type {
+                ActionType::INSPECT => {
+                    break;
+                }
+                ActionType::DESTROY => {
+                    assert_eq!(graph.neighbours(action.node_idx).len(), 3);
+                first_inspect_idx += 1;
+                }
+            }
+        }
+        let mut investigated = BTreeSet::new();
+        for action_idx in first_inspect_idx..solution.steps.len() {
+            assert!(matches!(solution.steps[action_idx].action_type, ActionType::INSPECT));
+            assert!(graph.neighbours(solution.steps[action_idx].node_idx).len() <= 2);
+            investigated.insert(solution.steps[action_idx].node_idx);
+        }
+        for idx in 0..graph.nodes.len() {
+            assert!(investigated.contains(&idx));
+        }
+    }
+
+    #[test]
+    fn test_1() {
+        let mut graph = Graph::create_disconnected_graph(4);
+        graph.add_edge(0, 1);
+        graph.add_edge(0, 2);
+        graph.add_edge(0, 3);
+
+        let solution = solve_test_case(&mut graph.clone());
+        _assert_valid_solution(&graph, &solution);
+    }
+
+    #[test]
+    fn test_2() {
+        let mut graph = Graph::create_disconnected_graph(7);
+        graph.add_edge(0, 1);
+        graph.add_edge(0, 2);
+        graph.add_edge(0, 3);
+        graph.add_edge(1, 4);
+        graph.add_edge(1, 5);
+        graph.add_edge(1, 6);
+
+        let solution = solve_test_case(&mut graph.clone());
+        _assert_valid_solution(&graph, &solution);
+    }
+
 }

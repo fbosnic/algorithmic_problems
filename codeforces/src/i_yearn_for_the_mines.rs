@@ -61,9 +61,6 @@ impl Graph {
             if *parent_queue.last().unwrap() == u {
                 parent_queue.pop();
             }
-            else if self.neighbours(u).len() == 1 {
-                tour.push(u);
-            }
             else {
                 stack.push(u);
                 for &v in self.neighbours(u) {

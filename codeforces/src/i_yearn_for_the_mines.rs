@@ -286,4 +286,36 @@ mod tests {
         _assert_valid_solution(&graph, &solution);
     }
 
+    #[test]
+    fn test_4() {
+        let mut graph = Graph::create_disconnected_graph(9);
+        graph.add_edge(0, 4);
+        graph.add_edge(1, 6);
+        graph.add_edge(1, 8);
+        graph.add_edge(2, 8);
+        graph.add_edge(3, 7);
+        graph.add_edge(3, 8);
+        graph.add_edge(4, 7);
+        graph.add_edge(5, 8);
+
+        let solution = solve_test_case(&mut graph.clone());
+        _assert_valid_solution(&graph, &solution);
+    }
+
+    #[test]
+    fn test_5() {
+        let mut graph = Graph::create_disconnected_graph(9);
+        graph.add_edge(0, 1);
+        graph.add_edge(0, 3);
+        graph.add_edge(0, 4);
+        graph.add_edge(2, 3);
+        graph.add_edge(3, 5);
+        graph.add_edge(3, 8);
+        graph.add_edge(4, 6);
+        graph.add_edge(4, 7);
+
+        let solution = solve_test_case(&mut graph.clone());
+        _assert_valid_solution(&graph, &solution);
+    }
+
 }

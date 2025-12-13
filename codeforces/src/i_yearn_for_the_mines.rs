@@ -217,10 +217,13 @@ mod tests {
                     break;
                 }
                 ActionType::DESTROY => {
-                    assert_eq!(graph.neighbours(action.node_idx).len(), 3);
+                    graph.destroy_edges_connected_to_node(action.node_idx);
                 first_inspect_idx += 1;
                 }
             }
+        }
+        for idx in 0..graph.nodes.len() {
+            assert!(graph.neighbours(idx).len() <= 2);
         }
         let mut investigated = BTreeSet::new();
         for action_idx in first_inspect_idx..solution.steps.len() {

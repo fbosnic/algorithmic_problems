@@ -2,6 +2,7 @@
 name = "codeforces_problems"
 version = "0.1.0"
 include = ["src"]
+edition = "2024"
 
 [[bin]]
 name = "the_least_round_way"

@@ -70,7 +70,6 @@ impl Graph {
                 }
                 parent_queue.push(u);
             }
-            dbg!(&tour);
         }
         return tour;
     }
@@ -133,10 +132,11 @@ fn solve_test_case(graph: &mut Graph) -> SolvedCase {
     let mut actions_to_take = Vec::new();
     let start = graph.leaves()[0];
     let tour = graph.dfs_tour(start);
-    let mut stack = Vec::new();
+    let mut stack = vec![graph.nodes.len()];  // Add a artificial parent to root node
     for node in tour {
-        if stack.len() < 2 {
-            break;
+        if node != *stack.last().unwrap() {
+            stack.push(node);
+            continue;
         }
         stack.pop();
         let parent = *stack.last().unwrap();
@@ -144,9 +144,9 @@ fn solve_test_case(graph: &mut Graph) -> SolvedCase {
             actions_to_take.push(Action { action_type: ActionType::DESTROY, node_idx: parent });
             graph.destroy_edges_connected_to_node(parent);
 
-        } else if graph.neighbours(node).len() > 1 {
+        } else if graph.neighbours(node).len() > 3 {
             actions_to_take.push(Action { action_type: ActionType::DESTROY, node_idx: node });
-            graph.destroy_edges_connected_to_node(parent);
+            graph.destroy_edges_connected_to_node(node);
         }
     }
 
@@ -156,20 +156,20 @@ fn solve_test_case(graph: &mut Graph) -> SolvedCase {
             continue;
         }
         actions_to_take.push(Action { action_type: ActionType::INSPECT, node_idx: l });
-        if graph.neighbours(l).len() == 0 {
-            continue;
-        }
-        let mut previous = l;
-        let mut current = *graph.neighbours(l).iter().next().unwrap();
-        loop {
-            actions_to_take.push(Action { action_type: ActionType::INSPECT, node_idx: current });
-            investigated.insert(current);
-            if graph.neighbours(current).len() == 1 {
-                break;
+        investigated.insert(l);
+        if graph.neighbours(l).len() != 0 {
+            let mut previous = l;
+            let mut current = *graph.neighbours(l).iter().next().unwrap();
+            loop {
+                actions_to_take.push(Action { action_type: ActionType::INSPECT, node_idx: current });
+                investigated.insert(current);
+                if graph.neighbours(current).len() == 1 {
+                    break;
+                }
+                let next = *graph.neighbours(current).iter().find(|&&x| x != previous).unwrap();
+                previous = current;
+                current = next;
             }
-            let next = *graph.neighbours(current).iter().find(|&&x| x != previous).unwrap();
-            previous = current;
-            current = next;
         }
     }
 
@@ -219,6 +219,7 @@ mod tests {
     }
 
     fn _assert_valid_solution(graph: &Graph, solution: &SolvedCase) {
+        let mut graph = graph.clone();
         assert!(solution.steps.len() <= 5 * graph.nodes.len() / 4);
         let mut first_inspect_idx = 0;
         for action in &solution.steps {

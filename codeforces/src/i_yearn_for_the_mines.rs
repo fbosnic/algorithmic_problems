@@ -258,4 +258,18 @@ mod tests {
         _assert_valid_solution(&graph, &solution);
     }
 
+    #[test]
+    fn test_3() {
+        let mut graph = Graph::create_disconnected_graph(7);
+        graph.add_edge(0, 1);
+        graph.add_edge(0, 2);
+        graph.add_edge(0, 3);
+        graph.add_edge(1, 4);
+        graph.add_edge(4, 5);
+        graph.add_edge(4, 6);
+
+        let solution = solve_test_case(&mut graph.clone());
+        _assert_valid_solution(&graph, &solution);
+    }
+
 }

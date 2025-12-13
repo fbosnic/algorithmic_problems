@@ -208,6 +208,16 @@ mod tests {
         assert_eq!(tour, vec![0, 2, 8, 8, 7, 7, 2, 1, 4, 4, 3, 6, 6, 5, 5, 3, 1, 0]);
     }
 
+    #[test]
+    fn test_dfs_tour_2() {
+        let mut graph = Graph::create_disconnected_graph(10);
+        graph.add_edge(0, 1);
+        graph.add_edge(0, 2);
+        graph.add_edge (0, 3);
+        let tour = graph.dfs_tour(1);
+        assert_eq!(tour, vec![1, 0, 3, 3, 2, 2, 0, 1]);
+    }
+
     fn _assert_valid_solution(graph: &Graph, solution: &SolvedCase) {
         assert!(solution.steps.len() <= 5 * graph.nodes.len() / 4);
         let mut first_inspect_idx = 0;

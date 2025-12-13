@@ -76,17 +76,20 @@ impl Graph {
 }
 
 
+#[derive(Debug)]
 struct SolvedCase {
     steps: Vec<Action>,
 }
 
 
+#[derive(Debug)]
 enum ActionType {
     INSPECT,
     DESTROY,
 }
 
 
+#[derive(Debug)]
 struct Action {
     action_type: ActionType,
     node_idx: usize,
@@ -141,8 +144,12 @@ fn solve_test_case(graph: &mut Graph) -> SolvedCase {
         stack.pop();
         let parent = *stack.last().unwrap();
         if graph.neighbours(node).len() == 3 {
-            actions_to_take.push(Action { action_type: ActionType::DESTROY, node_idx: parent });
-            graph.destroy_edges_connected_to_node(parent);
+            let _to_destroy = match graph.neighbours(node).contains(&parent) {
+                true => parent,
+                false => node,
+            };
+            actions_to_take.push(Action { action_type: ActionType::DESTROY, node_idx: _to_destroy });
+            graph.destroy_edges_connected_to_node(_to_destroy);
 
         } else if graph.neighbours(node).len() > 3 {
             actions_to_take.push(Action { action_type: ActionType::DESTROY, node_idx: node });

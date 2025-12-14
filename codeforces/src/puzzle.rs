@@ -76,16 +76,21 @@ fn solve(frac: &mut Fraction) -> Solution {
     if 2 * (frac.den + 1) < frac.num {
         return Solution { num_steps: -1, blocks: Vec::new() };
     }
-    let mut a = (frac.num - 2) / 4;
-    let b = (frac.num - 2) - a;
-    let k = frac.den / a * b + match frac.den % a {0 => 0, _ => 1};  // ceil operation
+    let mut a = frac.num / 4;
+    let mut b = frac.num / 2  - a;
+    let k = frac.den / (a * b) + match frac.den % a {0 => 0, _ => 1};  // ceil operation
     frac.num *= k;
     frac.den *= k;
     a *= k;
+    b *= k;
+
 
     let mut blocks = Vec::new();
-    for idx in 0..frac.den {
-        blocks.push(Coordinate { x:idx / a , y: idx % a });
+    for idx in 0..b {
+        blocks.push(Coordinate { x: 0, y: idx });
+    }
+    for idx in 0..(frac.den - b) {
+        blocks.push(Coordinate { x: 1 + idx % (a - 1) , y: idx / (a - 1) });
     }
     return Solution { num_steps: blocks.len().try_into().unwrap(), blocks: blocks };
 }
@@ -110,14 +115,16 @@ fn validate_solution(frac: Fraction, solution: Solution) {
     for block in solution.blocks {
         num += 4;
         for x_dis in [-1, 1] {
-            for y_dis in [-1, 1] {
-                if placed.contains(&Coordinate { x: block.x + x_dis, y: block.y + y_dis }) {
-                    num -= 2;
-                }
+            if placed.contains(&Coordinate { x: block.x + x_dis, y: block.y }) {
+                num -= 2;
+            }
+        }
+        for y_dis in [-1, 1] {
+            if placed.contains(&Coordinate { x: block.x, y: block.y + y_dis }) {
+                num -= 2;
             }
         }
         placed.insert(block);
-        num += 1;
     }
     assert_eq!(num * frac.den, den * frac.num);
 }
